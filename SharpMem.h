@@ -1,7 +1,11 @@
 // Sharp Memory Display library by adafruit
 // MIT license
 
-#include <WProgram.h>
+#if ARDUINO >= 100
+ #include "Arduino.h"
+#else
+ #include "WProgram.h"
+#endif
  
 class SharpMem{
  public:
