@@ -7,21 +7,23 @@
  #include "WProgram.h"
 #endif
  
-class SharpMem{
+#include <Adafruit_GFX.h>
+#include <avr/pgmspace.h>
+
+class Adafruit_SharpMem : public Adafruit_GFX {
  public:
-  SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint8_t extin, uint8_t dispen);
+  Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint8_t extin, uint8_t dispen);
   void begin(void);
-  void Enable(bool enable);
-  void DrawPixel(uint16_t x, uint16_t y);
-  void ClearPixel(uint16_t x, uint16_t y);
-  uint8_t GetPixel(uint16_t x, uint16_t y);
-  void ClearScreen();
-  void Refresh(void);
+  void enable(bool enable);
+  void drawPixel(int16_t x, int16_t y, uint16_t color);
+  uint8_t getPixel(uint16_t x, uint16_t y);
+  void clearDisplay();
+  void refresh(void);
 
  private:
   uint8_t _ss, _clk, _mosi, _extin, _dispen;
   uint8_t _sharpmem_vcom;
   
-  uint8_t swap(uint8_t data);
   void sendbyte(uint8_t data);
+  void sendbyteLSB(uint8_t data);
 };

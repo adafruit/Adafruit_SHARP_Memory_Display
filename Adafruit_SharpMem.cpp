@@ -1,25 +1,25 @@
-#include "SharpMem.h"
+#include "Adafruit_SharpMem.h"
 
 /**************************************************************************
     Sharp Memory Display Connector
     -----------------------------------------------------------------------
     Pin   Function        Notes
     ===   ==============  ===============================
-      1   VIN             1.0-5.0V (Boost Supply)
-      2   VDD             5.0V (Boost output, or 5V supply)
+      1   VIN             3.3-5.0V (into LDO supply)
+      2   3V3             3.3V out
       3   GND
       4   SCLK            Serial Clock
       5   MOSI            Serial Data Input
       6   CS              Serial Chip Select
+      9   EXTMODE         COM Inversion Select (Low = SW clock/serial)
       7   EXTCOMIN        External COM Inversion Signal
       8   DISP            Display On(High)/Off(Low)
-      9   EXTMODE         COM Inversion Select (Low = SW clock/serial)
 
  **************************************************************************/
 
 // LCD Dimensions
-#define SHARPMEM_LCDWIDTH       (96)
-#define SHARPMEM_LCDHEIGHT      (96) 
+#define SHARPMEM_LCDWIDTH       (128)
+#define SHARPMEM_LCDHEIGHT      (64) 
 #define SHARPMEM_BIT_WRITECMD   (0x80)
 #define SHARPMEM_BIT_VCOM       (0x40)
 #define SHARPMEM_BIT_CLEAR      (0x20)
@@ -30,7 +30,7 @@ byte sharpmem_buffer[(SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8];
 /* ************* */
 /* CONSTRUCTORS  */
 /* ************* */
-SharpMem::SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint8_t extin, uint8_t dispen) 
+Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint8_t extin, uint8_t dispen) 
 {
   _clk = clk;
   _mosi = mosi;
@@ -53,45 +53,24 @@ SharpMem::SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint8_t extin, uint8_t
   
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
+
 }
 
-void SharpMem::begin() {
+void Adafruit_SharpMem::begin() {
+  constructor(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT);
 }
 
 /* *************** */
 /* PRIVATE METHODS */
 /* *************** */
- 
-/**************************************************************************/
-/*!
-    @brief  Swaps the bit order from MSB to LSB, since the LCD expects LSB,
-            but the M3 shifts bits out MSB.
-*/
-/**************************************************************************/
-uint8_t SharpMem::swap(uint8_t data)
-{
-  uint8_t out = 0;
-  if (data)
-  {
-    if(data & 0x01) out |= 0x80;
-    if(data & 0x02) out |= 0x40;
-    if(data & 0x04) out |= 0x20;
-    if(data & 0x08) out |= 0x10;
-    if(data & 0x10) out |= 0x08;
-    if(data & 0x20) out |= 0x04;
-    if(data & 0x40) out |= 0x02;
-    if(data & 0x80) out |= 0x01;
-  }
 
-  return out;
-}
  
 /**************************************************************************/
 /*!
     @brief  Sends a single byte in pseudo-SPI.
 */
 /**************************************************************************/
-void SharpMem::sendbyte(uint8_t data) 
+void Adafruit_SharpMem::sendbyte(uint8_t data) 
 {
   uint8_t i = 0;
 
@@ -116,6 +95,30 @@ void SharpMem::sendbyte(uint8_t data)
   digitalWrite(_clk, LOW);
 }
 
+void Adafruit_SharpMem::sendbyteLSB(uint8_t data) 
+{
+  uint8_t i = 0;
+
+  // LCD expects LSB first
+  for (i=0; i<8; i++) 
+  { 
+    // Make sure clock starts low
+    digitalWrite(_clk, LOW);
+    if (data & 0x01) 
+    { 
+      digitalWrite(_mosi, HIGH);
+    } 
+    else 
+    { 
+      digitalWrite(_mosi, LOW);
+    } 
+    // Clock is active high
+    digitalWrite(_clk, HIGH);
+    data >>= 1; 
+  }
+  // Make sure clock ends low
+  digitalWrite(_clk, LOW);
+}
 /* ************** */
 /* PUBLIC METHODS */
 /* ************** */
@@ -129,7 +132,7 @@ void SharpMem::sendbyte(uint8_t data)
                 Whether the display should be on (TRUE/1) or off (FALSE/0)
 */
 /**************************************************************************/
-void SharpMem::Enable(bool enable)
+void Adafruit_SharpMem::enable(bool enable)
 {
   if (enable)
   {
@@ -151,30 +154,15 @@ void SharpMem::Enable(bool enable)
                 The y position (0 based)
 */
 /**************************************************************************/
-void SharpMem::DrawPixel(uint16_t x, uint16_t y) 
+void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color) 
 {
   if ((x >= SHARPMEM_LCDWIDTH) || (y >= SHARPMEM_LCDHEIGHT))
     return;
 
-  sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) /8] |= (1 << x % 8);
-}
-
-/**************************************************************************/
-/*! 
-    @brief Clears a single pixel in image buffer
-
-    @param[in]  x
-                The x position (0 based)
-    @param[in]  y
-                The y position (0 based)
-*/
-/**************************************************************************/
-void SharpMem::ClearPixel(uint16_t x, uint16_t y) 
-{
-  if ((x >= SHARPMEM_LCDWIDTH) || (y >= SHARPMEM_LCDHEIGHT))
-    return;
-
-  sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) /8] &= ~(1 << x % 8);
+  if (color)
+    sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) /8] |= (1 << x % 8);
+  else
+    sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) /8] &= ~(1 << x % 8);
 }
 
 /**************************************************************************/
@@ -189,7 +177,7 @@ void SharpMem::ClearPixel(uint16_t x, uint16_t y)
     @return     1 if the pixel is enabled, 0 if disabled
 */
 /**************************************************************************/
-uint8_t SharpMem::GetPixel(uint16_t x, uint16_t y)
+uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y)
 {
   if ((x >=SHARPMEM_LCDWIDTH) || (y >=SHARPMEM_LCDHEIGHT)) return 0;
   return sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) /8] & (1 << x % 8) ? 1 : 0;
@@ -200,13 +188,13 @@ uint8_t SharpMem::GetPixel(uint16_t x, uint16_t y)
     @brief Clears the screen
 */
 /**************************************************************************/
-void SharpMem::ClearScreen() 
+void Adafruit_SharpMem::clearDisplay() 
 {
-  memset(sharpmem_buffer, 0x00, (SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8);
+  memset(sharpmem_buffer, 0xff, (SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8);
   // Send the clear screen command rather than doing a HW refresh (quicker)
   digitalWrite(_ss, HIGH);
   sendbyte(_sharpmem_vcom | SHARPMEM_BIT_CLEAR);
-  sendbyte(0x00);
+  sendbyteLSB(0x00);
   TOGGLE_VCOM;
   digitalWrite(_ss, LOW);
 }
@@ -216,7 +204,7 @@ void SharpMem::ClearScreen()
     @brief Renders the contents of the pixel buffer on the LCD
 */
 /**************************************************************************/
-void SharpMem::Refresh(void) 
+void Adafruit_SharpMem::refresh(void) 
 {
   uint16_t i, totalbytes, currentline, oldline;  
   totalbytes = (SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8;
@@ -228,26 +216,26 @@ void SharpMem::Refresh(void)
 
   // Send the address for line 1
   oldline = currentline = 1;
-  sendbyte(swap(currentline));
+  sendbyteLSB(currentline);
 
   // Send image buffer
   for (i=0; i<totalbytes; i++)
   {
-    sendbyte(swap(sharpmem_buffer[i]));
+    sendbyteLSB(sharpmem_buffer[i]);
     currentline = ((i+1)/(SHARPMEM_LCDWIDTH/8)) + 1;
     if(currentline != oldline)
     {
       // Send end of line and address bytes
-      sendbyte(0x00);
+      sendbyteLSB(0x00);
       if (currentline <= SHARPMEM_LCDHEIGHT)
       {
-        sendbyte(swap(currentline));
+        sendbyteLSB(currentline);
       }
       oldline = currentline;
     }
   }
 
   // Send another trailing 8 bits for the last line
-  sendbyte(0x00);
+  sendbyteLSB(0x00);
   digitalWrite(_ss, LOW);
 }
