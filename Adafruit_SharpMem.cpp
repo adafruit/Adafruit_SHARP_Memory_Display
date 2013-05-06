@@ -17,9 +17,6 @@
 
  **************************************************************************/
 
-// LCD Dimensions
-#define SHARPMEM_LCDWIDTH       (128)
-#define SHARPMEM_LCDHEIGHT      (64) 
 #define SHARPMEM_BIT_WRITECMD   (0x80)
 #define SHARPMEM_BIT_VCOM       (0x40)
 #define SHARPMEM_BIT_CLEAR      (0x20)
@@ -51,6 +48,11 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint
   pinMode(_extin, OUTPUT);
   pinMode(_dispen, OUTPUT);
   
+  clkport     = portOutputRegister(digitalPinToPort(_clk));
+  clkpinmask  = digitalPinToBitMask(_clk);
+  dataport    = portOutputRegister(digitalPinToPort(_mosi));
+  datapinmask = digitalPinToBitMask(_mosi);
+  
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
 
@@ -78,21 +80,23 @@ void Adafruit_SharpMem::sendbyte(uint8_t data)
   for (i=0; i<8; i++) 
   { 
     // Make sure clock starts low
-    digitalWrite(_clk, LOW);
+    //digitalWrite(_clk, LOW);
+    *clkport &= ~clkpinmask;
     if (data & 0x80) 
-    { 
-      digitalWrite(_mosi, HIGH);
-    } 
+      //digitalWrite(_mosi, HIGH);
+      *dataport |=  datapinmask;
     else 
-    { 
-      digitalWrite(_mosi, LOW);
-    } 
+      //digitalWrite(_mosi, LOW);
+      *dataport &= ~datapinmask;
+
     // Clock is active high
-    digitalWrite(_clk, HIGH);
+    //digitalWrite(_clk, HIGH);
+    *clkport |=  clkpinmask;
     data <<= 1; 
   }
   // Make sure clock ends low
-  digitalWrite(_clk, LOW);
+  //digitalWrite(_clk, LOW);
+  *clkport &= ~clkpinmask;
 }
 
 void Adafruit_SharpMem::sendbyteLSB(uint8_t data) 
@@ -103,21 +107,22 @@ void Adafruit_SharpMem::sendbyteLSB(uint8_t data)
   for (i=0; i<8; i++) 
   { 
     // Make sure clock starts low
-    digitalWrite(_clk, LOW);
+    //digitalWrite(_clk, LOW);
+    *clkport &= ~clkpinmask;
     if (data & 0x01) 
-    { 
-      digitalWrite(_mosi, HIGH);
-    } 
+      //digitalWrite(_mosi, HIGH);
+      *dataport |=  datapinmask;
     else 
-    { 
-      digitalWrite(_mosi, LOW);
-    } 
+      //digitalWrite(_mosi, LOW);
+      *dataport &= ~datapinmask;
     // Clock is active high
-    digitalWrite(_clk, HIGH);
+    //digitalWrite(_clk, HIGH);
+    *clkport |=  clkpinmask;
     data >>= 1; 
   }
   // Make sure clock ends low
-  digitalWrite(_clk, LOW);
+  //digitalWrite(_clk, LOW);
+  *clkport &= ~clkpinmask;
 }
 /* ************** */
 /* PUBLIC METHODS */

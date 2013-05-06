@@ -38,18 +38,13 @@ void setup(void)
 
   // draw many lines
   testdrawline();
-  /*
-  display.refresh();
-  delay(2000);
+  delay(500);
   display.clearDisplay();
 
   // draw rectangles
   testdrawrect();
-  display.refresh();
-  delay(2000);
-  display.clearDisplay();
-  */
-  
+  delay(500);
+//  display.clearDisplay();
 }
 
 void loop(void) 

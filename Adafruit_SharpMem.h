@@ -10,6 +10,10 @@
 #include <Adafruit_GFX.h>
 #include <avr/pgmspace.h>
 
+// LCD Dimensions
+#define SHARPMEM_LCDWIDTH       (128)
+#define SHARPMEM_LCDHEIGHT      (96) 
+
 class Adafruit_SharpMem : public Adafruit_GFX {
  public:
   Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint8_t extin, uint8_t dispen);
@@ -22,7 +26,8 @@ class Adafruit_SharpMem : public Adafruit_GFX {
 
  private:
   uint8_t _ss, _clk, _mosi, _extin, _dispen;
-  uint8_t _sharpmem_vcom;
+  volatile uint8_t *dataport, *clkport;
+  uint8_t _sharpmem_vcom, datapinmask, clkpinmask;
   
   void sendbyte(uint8_t data);
   void sendbyteLSB(uint8_t data);
