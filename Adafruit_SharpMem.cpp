@@ -1,3 +1,21 @@
+/*********************************************************************
+This is an Arduino library for our Monochrome SHARP Memory Displays
+
+  Pick one up today in the adafruit shop!
+  ------> http://www.adafruit.com/products/1393
+
+These displays use SPI to communicate, 3 pins are required to  
+interface
+
+Adafruit invests time and resources providing this open source code, 
+please support Adafruit and open-source hardware by purchasing 
+products from Adafruit!
+
+Written by Limor Fried/Ladyada  for Adafruit Industries.  
+BSD license, check license.txt for more information
+All text above, and the splash screen must be included in any redistribution
+*********************************************************************/
+
 #include "Adafruit_SharpMem.h"
 
 /**************************************************************************
@@ -27,26 +45,20 @@ byte sharpmem_buffer[(SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8];
 /* ************* */
 /* CONSTRUCTORS  */
 /* ************* */
-Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint8_t extin, uint8_t dispen) 
+Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss) 
 {
   _clk = clk;
   _mosi = mosi;
   _ss = ss;
-  _extin = extin;
-  _dispen = dispen;
 
   // Set pin state before direction to make sure they start this way (no glitching)
   digitalWrite(_ss, HIGH);  
   digitalWrite(_clk, LOW);  
   digitalWrite(_mosi, HIGH);  
-  digitalWrite(_extin, LOW);  
-  digitalWrite(_dispen, LOW);  
   
   pinMode(_ss, OUTPUT);
   pinMode(_clk, OUTPUT);
   pinMode(_mosi, OUTPUT);
-  pinMode(_extin, OUTPUT);
-  pinMode(_dispen, OUTPUT);
   
   clkport     = portOutputRegister(digitalPinToPort(_clk));
   clkpinmask  = digitalPinToBitMask(_clk);
@@ -60,6 +72,7 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint
 
 void Adafruit_SharpMem::begin() {
   constructor(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT);
+  setRotation(2);
 }
 
 /* *************** */
@@ -127,27 +140,6 @@ void Adafruit_SharpMem::sendbyteLSB(uint8_t data)
 /* ************** */
 /* PUBLIC METHODS */
 /* ************** */
-
-/**************************************************************************/
-/*! 
-    @brief Turns the display on or off (memory is retained even when the
-           display is off)
-
-    @param[in]  enabled
-                Whether the display should be on (TRUE/1) or off (FALSE/0)
-*/
-/**************************************************************************/
-void Adafruit_SharpMem::enable(bool enable)
-{
-  if (enable)
-  {
-    digitalWrite(_dispen, HIGH);  
-  }
-  else
-  {
-    digitalWrite(_dispen, LOW);  
-  }
-}
 
 /**************************************************************************/
 /*! 

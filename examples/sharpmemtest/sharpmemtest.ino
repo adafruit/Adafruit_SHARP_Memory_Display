@@ -1,36 +1,44 @@
-/* Draws a line across the screen */
+/*********************************************************************
+This is an example sketch for our Monochrome SHARP Memory Displays
+
+  Pick one up today in the adafruit shop!
+  ------> http://www.adafruit.com/products/1393
+
+These displays use SPI to communicate, 3 pins are required to  
+interface
+
+Adafruit invests time and resources providing this open source code, 
+please support Adafruit and open-source hardware by purchasing 
+products from Adafruit!
+
+Written by Limor Fried/Ladyada  for Adafruit Industries.  
+BSD license, check license.txt for more information
+All text above, and the splash screen must be included in any redistribution
+*********************************************************************/
 
 #include <Adafruit_GFX.h>
 #include <Adafruit_SharpMem.h>
 
-#define SCK 13
+// any pins can be used
+#define SCK 10
 #define MOSI 11
-#define SS 10
-#define EXTIN 9
-#define DISPEN 8
+#define SS 13
 
-Adafruit_SharpMem display(SCK, MOSI, SS, EXTIN, DISPEN);
+Adafruit_SharpMem display(SCK, MOSI, SS);
 
-#define BLACK false
-#define WHITE true
+#define BLACK 0
+#define WHITE 1
 
 void setup(void) 
 {
   Serial.begin(9600);
   Serial.println("Hello!");
 
+  // start & clear the display
   display.begin();
   display.clearDisplay();
-  // Turn the screen on  
-  display.enable(true);
-  
-  uint32_t i;
-  for (i = 0; i < 96; i++)
-  {
-    display.drawPixel(i, 96-i, BLACK);
-  }
 
-    // draw a single pixel
+  // draw a single pixel
   display.drawPixel(10, 10, BLACK);
   display.refresh();
   delay(500);
@@ -44,7 +52,58 @@ void setup(void)
   // draw rectangles
   testdrawrect();
   delay(500);
-//  display.clearDisplay();
+  display.clearDisplay();
+
+  // draw multiple rectangles
+  testfillrect();
+  display.refresh();
+  delay(500);
+  display.clearDisplay();
+
+  // draw a circle, 10 pixel radius
+  display.fillCircle(display.width()/2, display.height()/2, 10, BLACK);
+  display.refresh();
+  delay(500);
+  display.clearDisplay();
+
+  testdrawroundrect();
+  display.refresh();  
+  delay(500);
+  display.clearDisplay();
+
+  testfillroundrect();
+  display.refresh();
+  delay(500);
+  display.clearDisplay();
+
+  testdrawtriangle();
+  display.refresh();
+  delay(500);
+  display.clearDisplay();
+   
+  testfilltriangle();
+  display.refresh();
+  delay(500);
+  display.clearDisplay();
+
+  // draw the first ~12 characters in the font
+  testdrawchar();
+  display.refresh();
+  delay(2000);
+  display.clearDisplay();
+
+  // text display tests
+  display.setTextSize(1);
+  display.setTextColor(BLACK);
+  display.setCursor(0,0);
+  display.println("Hello, world!");
+  display.setTextColor(WHITE, BLACK); // 'inverted' text
+  display.println(3.141592);
+  display.setTextSize(2);
+  display.setTextColor(BLACK);
+  display.print("0x"); display.println(0xDEADBEEF, HEX);
+  display.refresh();
+  delay(2000);
 }
 
 void loop(void) 
@@ -55,7 +114,6 @@ void loop(void)
 }
 
 ///
-
 
 void testdrawchar(void) {
   display.setTextSize(1);
@@ -73,7 +131,7 @@ void testdrawchar(void) {
 
 void testdrawcircle(void) {
   for (uint8_t i=0; i<display.height(); i+=2) {
-    display.drawCircle(display.width()/2, display.height()/2, i, BLACK);
+    display.drawCircle(display.width()/2-5, display.height()/2-5, i, BLACK);
     display.refresh();
   }
 }
@@ -110,7 +168,7 @@ void testfilltriangle(void) {
 }
 
 void testdrawroundrect(void) {
-  for (uint8_t i=0; i<display.height()/2-2; i+=2) {
+  for (uint8_t i=0; i<display.height()/4; i+=2) {
     display.drawRoundRect(i, i, display.width()-2*i, display.height()-2*i, display.height()/4, BLACK);
     display.refresh();
   }
@@ -118,7 +176,7 @@ void testdrawroundrect(void) {
 
 void testfillroundrect(void) {
   uint8_t color = BLACK;
-  for (uint8_t i=0; i<display.height()/2-2; i+=2) {
+  for (uint8_t i=0; i<display.height()/4; i+=2) {
     display.fillRoundRect(i, i, display.width()-2*i, display.height()-2*i, display.height()/4, color);
     if (color == WHITE) color = BLACK;
     else color = WHITE;
