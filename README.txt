@@ -6,6 +6,10 @@ This is an Arduino library for our Monochrome SHARP Memory Displays
 These displays use SPI to communicate, 3 pins are required to  
 interface
 
+To install this library, check out our detailed library install tutorial:
+http://learn.adafruit.com/adafruit-all-about-arduino-libraries-install-use
+
+
 Adafruit invests time and resources providing this open source code, 
 please support Adafruit and open-source hardware by purchasing 
 products from Adafruit!
