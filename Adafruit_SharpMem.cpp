@@ -45,8 +45,8 @@ byte sharpmem_buffer[(SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8];
 /* ************* */
 /* CONSTRUCTORS  */
 /* ************* */
-Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss) 
-{
+Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss) :
+Adafruit_GFX(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT) {
   _clk = clk;
   _mosi = mosi;
   _ss = ss;
@@ -71,7 +71,6 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss)
 }
 
 void Adafruit_SharpMem::begin() {
-  constructor(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT);
   setRotation(2);
 }
 
