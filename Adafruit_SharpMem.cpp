@@ -18,6 +18,14 @@ All text above, and the splash screen must be included in any redistribution
 
 #include "Adafruit_SharpMem.h"
 
+// Hardware SPI used for Arduino Due
+#if defined (_VARIANT_ARDUINO_DUE_X_)
+  #include "SPI.h"
+  // Do not connect anything to SPI_CS_PIN pin (either 4, 10, or 52)
+  // See http://arduino.cc/en/Reference/DueExtendedSPI
+  #define SPI_CS_PIN 4
+#endif
+
 /**************************************************************************
     Sharp Memory Display Connector
     -----------------------------------------------------------------------
@@ -52,19 +60,22 @@ Adafruit_GFX(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT) {
   _ss = ss;
 
   // Set pin state before direction to make sure they start this way (no glitching)
-  digitalWrite(_ss, HIGH);  
-  digitalWrite(_clk, LOW);  
-  digitalWrite(_mosi, HIGH);  
-  
+  digitalWrite(_ss, LOW);  
   pinMode(_ss, OUTPUT);
-  pinMode(_clk, OUTPUT);
-  pinMode(_mosi, OUTPUT);
+ 
+  #if defined __AVR__
+    digitalWrite(_clk, LOW);  
+    digitalWrite(_mosi, HIGH);  
+    
+    pinMode(_clk, OUTPUT);
+    pinMode(_mosi, OUTPUT);
   
-  clkport     = portOutputRegister(digitalPinToPort(_clk));
-  clkpinmask  = digitalPinToBitMask(_clk);
-  dataport    = portOutputRegister(digitalPinToPort(_mosi));
-  datapinmask = digitalPinToBitMask(_mosi);
-  
+    clkport     = portOutputRegister(digitalPinToPort(_clk));
+    clkpinmask  = digitalPinToBitMask(_clk);
+    dataport    = portOutputRegister(digitalPinToPort(_mosi));
+    datapinmask = digitalPinToBitMask(_mosi);
+  #endif
+
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
 
@@ -72,6 +83,13 @@ Adafruit_GFX(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT) {
 
 void Adafruit_SharpMem::begin() {
   setRotation(2);
+
+  #if defined (_VARIANT_ARDUINO_DUE_X_)
+    SPI.begin(SPI_CS_PIN);
+    SPI.setClockDivider(SPI_CS_PIN, 84);    // SPI clock frequency must be < 1 MHz
+    SPI.setDataMode(SPI_CS_PIN, SPI_MODE0);  // CPOL = 0, CPHA = 0
+    SPI.setBitOrder(SPI_CS_PIN, LSBFIRST);   // LSB comes first
+  #endif
 }
 
 /* *************** */
@@ -81,60 +99,82 @@ void Adafruit_SharpMem::begin() {
  
 /**************************************************************************/
 /*!
-    @brief  Sends a single byte in pseudo-SPI.
+    @brief  Sends a single byte in SPI.
 */
 /**************************************************************************/
 void Adafruit_SharpMem::sendbyte(uint8_t data) 
 {
-  uint8_t i = 0;
+  // Use pseudo-SPI for AVR-based boards
+  #if defined __AVR__
+    uint8_t i = 0;
 
-  // LCD expects LSB first
-  for (i=0; i<8; i++) 
-  { 
-    // Make sure clock starts low
+    // LCD expects LSB first
+    for (i=0; i<8; i++) 
+    { 
+      // Make sure clock starts low
+      //digitalWrite(_clk, LOW);
+      *clkport &= ~clkpinmask;
+      if (data & 0x80) 
+        //digitalWrite(_mosi, HIGH);
+        *dataport |=  datapinmask;
+      else 
+        //digitalWrite(_mosi, LOW);
+        *dataport &= ~datapinmask;
+
+      // Clock is active high
+      //digitalWrite(_clk, HIGH);
+      *clkport |=  clkpinmask;
+      data <<= 1; 
+    }
+    // Make sure clock ends low
     //digitalWrite(_clk, LOW);
     *clkport &= ~clkpinmask;
-    if (data & 0x80) 
-      //digitalWrite(_mosi, HIGH);
-      *dataport |=  datapinmask;
-    else 
-      //digitalWrite(_mosi, LOW);
-      *dataport &= ~datapinmask;
+  #endif
 
-    // Clock is active high
-    //digitalWrite(_clk, HIGH);
-    *clkport |=  clkpinmask;
-    data <<= 1; 
-  }
-  // Make sure clock ends low
-  //digitalWrite(_clk, LOW);
-  *clkport &= ~clkpinmask;
+  // Use hardware SPI for ARM-based boards (it's faster)
+  #if defined (_VARIANT_ARDUINO_DUE_X_)
+    // invert byte to make LSB first
+    // code from http://forum.arduino.cc/index.php?topic=134482.0
+    data = ((data >> 1) & 0x55) | ((data << 1) & 0xaa);
+    data = ((data >> 2) & 0x33) | ((data << 2) & 0xcc);
+    data = ((data >> 4) | (data << 4));
+
+    SPI.transfer(SPI_CS_PIN, data);
+  #endif
 }
 
 void Adafruit_SharpMem::sendbyteLSB(uint8_t data) 
 {
-  uint8_t i = 0;
+  // Use pseudo-SPI for AVR-based boards
+  #if defined __AVR__
+    uint8_t i = 0;
 
-  // LCD expects LSB first
-  for (i=0; i<8; i++) 
-  { 
-    // Make sure clock starts low
+    // LCD expects LSB first
+    for (i=0; i<8; i++) 
+    { 
+      // Make sure clock starts low
+      //digitalWrite(_clk, LOW);
+      *clkport &= ~clkpinmask;
+      if (data & 0x01) 
+        //digitalWrite(_mosi, HIGH);
+        *dataport |=  datapinmask;
+      else 
+        //digitalWrite(_mosi, LOW);
+        *dataport &= ~datapinmask;
+      // Clock is active high
+      //digitalWrite(_clk, HIGH);
+      *clkport |=  clkpinmask;
+      data >>= 1; 
+    }
+    // Make sure clock ends low
     //digitalWrite(_clk, LOW);
     *clkport &= ~clkpinmask;
-    if (data & 0x01) 
-      //digitalWrite(_mosi, HIGH);
-      *dataport |=  datapinmask;
-    else 
-      //digitalWrite(_mosi, LOW);
-      *dataport &= ~datapinmask;
-    // Clock is active high
-    //digitalWrite(_clk, HIGH);
-    *clkport |=  clkpinmask;
-    data >>= 1; 
-  }
-  // Make sure clock ends low
-  //digitalWrite(_clk, LOW);
-  *clkport &= ~clkpinmask;
+  #endif
+
+  // Use hardware SPI for ARM-based boards (it's faster)
+  #if defined (_VARIANT_ARDUINO_DUE_X_)
+    SPI.transfer(SPI_CS_PIN, data);
+  #endif
 }
 /* ************** */
 /* PUBLIC METHODS */
