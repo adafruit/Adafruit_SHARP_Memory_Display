@@ -195,6 +195,22 @@ void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color)
   if ((x >= SHARPMEM_LCDWIDTH) || (y >= SHARPMEM_LCDHEIGHT))
     return;
 
+  // check rotation, move pixel around if necessary
+  switch (getRotation()) {
+      case 1:
+          swap(x, y);
+          x = SHARPMEM_LCDWIDTH - x - 1;
+          break;
+      case 2:
+          x = SHARPMEM_LCDWIDTH - x - 1;
+          y = SHARPMEM_LCDHEIGHT - y - 1;
+          break;
+      case 3:
+          swap(x, y);
+          y = SHARPMEM_LCDHEIGHT - y - 1;
+          break;
+  }
+
   if (color)
     sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) /8] |= (1 << x % 8);
   else
