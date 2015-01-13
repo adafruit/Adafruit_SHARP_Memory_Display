@@ -82,7 +82,7 @@ Adafruit_GFX(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT) {
 }
 
 void Adafruit_SharpMem::begin() {
-  setRotation(2);
+  setRotation(0);
 
   #if defined (_VARIANT_ARDUINO_DUE_X_)
     SPI.begin(SPI_CS_PIN);
@@ -197,17 +197,19 @@ void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color)
 
   // check rotation, move pixel around if necessary
   switch (getRotation()) {
-      case 1:
+      case 1: // 90 degrees clockwise
           swap(x, y);
           x = SHARPMEM_LCDWIDTH - x - 1;
           break;
-      case 2:
+      case 2: // 180 degrees
           x = SHARPMEM_LCDWIDTH - x - 1;
           y = SHARPMEM_LCDHEIGHT - y - 1;
           break;
-      case 3:
+      case 3: // 90 degrees counterclockwise
           swap(x, y);
           y = SHARPMEM_LCDHEIGHT - y - 1;
+          break;
+      default: // no rotation
           break;
   }
 
@@ -240,7 +242,7 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y)
     @brief Clears the screen
 */
 /**************************************************************************/
-void Adafruit_SharpMem::clearDisplay() 
+void Adafruit_SharpMem::clearDisplay(void) 
 {
   memset(sharpmem_buffer, 0xff, (SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8);
   // Send the clear screen command rather than doing a HW refresh (quicker)
@@ -249,6 +251,17 @@ void Adafruit_SharpMem::clearDisplay()
   sendbyteLSB(0x00);
   TOGGLE_VCOM;
   digitalWrite(_ss, LOW);
+}
+
+
+/**************************************************************************/
+/*! 
+    @brief Clears the buffer, but not the screen
+*/
+/**************************************************************************/
+void Adafruit_SharpMem::clearBuffer(void)
+{
+  memset(sharpmem_buffer, 0xff, (SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8);
 }
 
 /**************************************************************************/
@@ -288,6 +301,16 @@ void Adafruit_SharpMem::refresh(void)
   }
 
   // Send another trailing 8 bits for the last line
+  sendbyteLSB(0x00);
+  digitalWrite(_ss, LOW);
+}
+
+
+void Adafruit_SharpMem::toggleVcom(void)
+{
+  digitalWrite(_ss, HIGH);
+  sendbyte(SHARPMEM_BIT_WRITECMD | _sharpmem_vcom);
+  TOGGLE_VCOM;
   sendbyteLSB(0x00);
   digitalWrite(_ss, LOW);
 }

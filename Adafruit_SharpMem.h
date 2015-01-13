@@ -26,8 +26,8 @@ All text above, and the splash screen must be included in any redistribution
 #include <avr/pgmspace.h>
 
 // LCD Dimensions
-#define SHARPMEM_LCDWIDTH       (96)
-#define SHARPMEM_LCDHEIGHT      (96) 
+#define SHARPMEM_LCDWIDTH       (128)
+#define SHARPMEM_LCDHEIGHT      (128) 
 
 class Adafruit_SharpMem : public Adafruit_GFX {
  public:
@@ -35,8 +35,11 @@ class Adafruit_SharpMem : public Adafruit_GFX {
   void begin(void);
   void drawPixel(int16_t x, int16_t y, uint16_t color);
   uint8_t getPixel(uint16_t x, uint16_t y);
-  void clearDisplay();
+  void clearDisplay(void);
+  void clearBuffer(void);
   void refresh(void);
+  void toggleVcom(void);
+
 
  private:
   uint8_t _ss, _clk, _mosi;
