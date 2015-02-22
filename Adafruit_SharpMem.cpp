@@ -152,13 +152,34 @@ void Adafruit_SharpMem::sendbyteLSB(uint8_t data)
 /**************************************************************************/
 void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color) 
 {
-  if ((x >= SHARPMEM_LCDWIDTH) || (y >= SHARPMEM_LCDHEIGHT))
-    return;
+  if((x < 0) || (x >= _width) || (y < 0) || (y >= _height)) return;
 
-  if (color)
-    sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) /8] |= (1 << x % 8);
-  else
-    sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) /8] &= ~(1 << x % 8);
+  switch(rotation) {
+   case 1:
+    swap(x, y);
+    x = WIDTH  - 1 - x;
+    break;
+   case 2:
+    x = WIDTH  - 1 - x;
+    y = HEIGHT - 1 - y;
+    break;
+   case 3:
+    swap(x, y);
+    y = HEIGHT - 1 - y;
+    break;
+  }
+
+  // 1<<n is a costly operation on AVR -- table usu. smaller & faster
+  const uint8_t PROGMEM set[] = {  1,  2,  4,  8,  16,  32,  64,  128 },
+                        clr[] = { ~1, ~2, ~4, ~8, ~16, ~32, ~64, ~128 };
+
+  if(color) {
+    sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) / 8] |=
+      pgm_read_byte(&set[x & 7]);
+  } else {
+    sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) / 8] &=
+      pgm_read_byte(&clr[x & 7]);
+  }
 }
 
 /**************************************************************************/
