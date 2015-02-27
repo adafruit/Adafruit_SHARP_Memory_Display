@@ -170,8 +170,9 @@ void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color)
   }
 
   // 1<<n is a costly operation on AVR -- table usu. smaller & faster
-  const uint8_t PROGMEM set[] = {  1,  2,  4,  8,  16,  32,  64,  128 },
-                        clr[] = { ~1, ~2, ~4, ~8, ~16, ~32, ~64, ~128 };
+  static const uint8_t PROGMEM
+    set[] = {  1,  2,  4,  8,  16,  32,  64,  128 },
+    clr[] = { ~1, ~2, ~4, ~8, ~16, ~32, ~64, ~128 };
 
   if(color) {
     sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) / 8] |=
