@@ -140,6 +140,11 @@ void Adafruit_SharpMem::sendbyteLSB(uint8_t data)
 /* PUBLIC METHODS */
 /* ************** */
 
+// 1<<n is a costly operation on AVR -- table usu. smaller & faster
+static const uint8_t PROGMEM
+  set[] = {  1,  2,  4,  8,  16,  32,  64,  128 },
+  clr[] = { ~1, ~2, ~4, ~8, ~16, ~32, ~64, ~128 };
+
 /**************************************************************************/
 /*! 
     @brief Draws a single pixel in image buffer
@@ -169,11 +174,6 @@ void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color)
     break;
   }
 
-  // 1<<n is a costly operation on AVR -- table usu. smaller & faster
-  static const uint8_t PROGMEM
-    set[] = {  1,  2,  4,  8,  16,  32,  64,  128 },
-    clr[] = { ~1, ~2, ~4, ~8, ~16, ~32, ~64, ~128 };
-
   if(color) {
     sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) / 8] |=
       pgm_read_byte(&set[x & 7]);
@@ -197,8 +197,25 @@ void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color)
 /**************************************************************************/
 uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y)
 {
-  if ((x >=SHARPMEM_LCDWIDTH) || (y >=SHARPMEM_LCDHEIGHT)) return 0;
-  return sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) /8] & (1 << x % 8) ? 1 : 0;
+  if((x >= _width) || (y >= _height)) return 0; // <0 test not needed, unsigned
+
+  switch(rotation) {
+   case 1:
+    swap(x, y);
+    x = WIDTH  - 1 - x;
+    break;
+   case 2:
+    x = WIDTH  - 1 - x;
+    y = HEIGHT - 1 - y;
+    break;
+   case 3:
+    swap(x, y);
+    y = HEIGHT - 1 - y;
+    break;
+  }
+
+  return sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) / 8] &
+    pgm_read_byte(&set[x & 7]) ? 1 : 0;
 }
 
 /**************************************************************************/
