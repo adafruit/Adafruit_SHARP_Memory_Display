@@ -23,7 +23,11 @@ All text above, and the splash screen must be included in any redistribution
 #endif
  
 #include <Adafruit_GFX.h>
-#include <avr/pgmspace.h>
+#ifdef __AVR
+  #include <avr/pgmspace.h>
+#elif defined(ESP8266)
+  #include <pgmspace.h>
+#endif
 
 // LCD Dimensions
 #define SHARPMEM_LCDWIDTH       (96)
