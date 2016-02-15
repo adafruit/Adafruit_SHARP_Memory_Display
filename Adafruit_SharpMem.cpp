@@ -60,10 +60,12 @@ Adafruit_GFX(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT) {
 
   // Set pin state before direction to make sure they start this way (no glitching)
   digitalWrite(_ss, HIGH);  
+  pinMode(_ss, OUTPUT);
+
+#ifdef __AVR__
   digitalWrite(_clk, LOW);  
   digitalWrite(_mosi, HIGH);  
   
-  pinMode(_ss, OUTPUT);
   pinMode(_clk, OUTPUT);
   pinMode(_mosi, OUTPUT);
   
@@ -71,6 +73,7 @@ Adafruit_GFX(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT) {
   clkpinmask  = digitalPinToBitMask(_clk);
   dataport    = portOutputRegister(digitalPinToPort(_mosi));
   datapinmask = digitalPinToBitMask(_mosi);
+#endif
   
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
@@ -79,6 +82,10 @@ Adafruit_GFX(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT) {
 
 void Adafruit_SharpMem::begin() {
   setRotation(2);
+
+#ifndef __AVR__
+  SPI.begin();
+#endif
 }
 
 /* *************** */
@@ -93,6 +100,7 @@ void Adafruit_SharpMem::begin() {
 /**************************************************************************/
 void Adafruit_SharpMem::sendbyte(uint8_t data) 
 {
+#ifdef __AVR__
   uint8_t i = 0;
 
   // LCD expects LSB first
@@ -116,10 +124,15 @@ void Adafruit_SharpMem::sendbyte(uint8_t data)
   // Make sure clock ends low
   //digitalWrite(_clk, LOW);
   *clkport &= ~clkpinmask;
+#else
+  SPI.setBitOrder(MSBFIRST);
+  SPI.transfer(data);
+#endif
 }
 
 void Adafruit_SharpMem::sendbyteLSB(uint8_t data) 
 {
+#ifdef __AVR__
   uint8_t i = 0;
 
   // LCD expects LSB first
@@ -142,6 +155,10 @@ void Adafruit_SharpMem::sendbyteLSB(uint8_t data)
   // Make sure clock ends low
   //digitalWrite(_clk, LOW);
   *clkport &= ~clkpinmask;
+#else
+  SPI.setBitOrder(LSBFIRST);
+  SPI.transfer(data);
+#endif
 }
 /* ************** */
 /* PUBLIC METHODS */
