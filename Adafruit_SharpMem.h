@@ -44,8 +44,14 @@ class Adafruit_SharpMem : public Adafruit_GFX {
 
  private:
   uint8_t _ss, _clk, _mosi;
+#ifdef __AVR__
   volatile uint8_t *dataport, *clkport;
   uint8_t _sharpmem_vcom, datapinmask, clkpinmask;
+#endif
+#if defined(__SAM3X8E__) || defined(ARDUINO_ARCH_SAMD)
+    volatile RwReg *dataport, *clkport;
+    uint32_t _sharpmem_vcom, datapinmask, clkpinmask;
+#endif
   
   void sendbyte(uint8_t data);
   void sendbyteLSB(uint8_t data);
