@@ -29,9 +29,14 @@ All text above, and the splash screen must be included in any redistribution
   #include <pgmspace.h>
 #endif
 
+#ifndef __AVR__
+#include <SPI.h>
+#endif
+
 // LCD Dimensions
 #define SHARPMEM_LCDWIDTH       (96)
 #define SHARPMEM_LCDHEIGHT      (96) 
+#define SHARPMEM_LCDDEPTH	(1)
 
 class Adafruit_SharpMem : public Adafruit_GFX {
  public:
