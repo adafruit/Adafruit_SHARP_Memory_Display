@@ -47,6 +47,14 @@ All text above, and the splash screen must be included in any redistribution
 #define SHARPMEM_BIT_CLEAR      (0x20)
 #define TOGGLE_VCOM             do { _sharpmem_vcom = _sharpmem_vcom ? 0x00 : SHARPMEM_BIT_VCOM; } while(0);
 
+#ifdef USE_FAST_PINIO
+#define SSPI_MOSI_HIGH()        *mosiport |=  mosipinmask
+#define SSPI_MOSI_LOW()         *mosiport &= ~mosipinmask
+#define SSPI_SCK_HIGH()         *clkport |=  clkpinmask
+#define SSPI_SCK_LOW()          *clkport &= ~clkpinmask
+#define SSPI_MISO_READ()        ((*misoport & misopinmask) != 0)
+#endif
+      
 byte sharpmem_buffer[(SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8];
 
 /* ************* */

@@ -25,8 +25,12 @@ All text above, and the splash screen must be included in any redistribution
 #include <Adafruit_GFX.h>
 #ifdef __AVR
   #include <avr/pgmspace.h>
-#elif defined(ESP8266)
+#elif defined(ESP8266) || defined(ESP32)
   #include <pgmspace.h>
+#endif
+
+#if defined (ESP32)
+#define USE_FAST_PINIO
 #endif
 
 // LCD Dimensions
@@ -52,7 +56,11 @@ class Adafruit_SharpMem : public Adafruit_GFX {
     volatile RwReg *dataport, *clkport;
     uint32_t _sharpmem_vcom, datapinmask, clkpinmask;
 #endif
-  
+#ifdef USE_FAST_PINIO
+    volatile uint32_t *dataport, *clkport;
+    uint32_t  _sharpmem_vcom, datapinmask, clkpinmask;
+#endif
+    
   void sendbyte(uint8_t data);
   void sendbyteLSB(uint8_t data);
 };

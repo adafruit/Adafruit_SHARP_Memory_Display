@@ -19,7 +19,7 @@ All text above, and the splash screen must be included in any redistribution
 #include <Adafruit_GFX.h>
 #include <Adafruit_SharpMem.h>
 
-// any pins can be used
+// any pins can be used (tested on ESP32 with SCK 18, MOSI 23, SS 5)
 #define SCK 10
 #define MOSI 11
 #define SS 13
