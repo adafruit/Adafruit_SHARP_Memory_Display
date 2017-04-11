@@ -22,6 +22,10 @@ All text above, and the splash screen must be included in any redistribution
  #include "WProgram.h"
 #endif
 
+#ifndef __AVR__
+#include <SPI.h>
+#endif
+
 #include <Adafruit_GFX.h>
 #ifdef __AVR
   #include <avr/pgmspace.h>
@@ -42,7 +46,7 @@ All text above, and the splash screen must be included in any redistribution
 
     -----------------------------------------------------------------------*/
 //   #define SHARPMEM_96_96
-//   #define SHARPMEM_128_128
+   #define SHARPMEM_128_128
 /*=========================================================================*/
 
 #if !defined SHARPMEM_96_96 && !defined SHARPMEM_128_128
