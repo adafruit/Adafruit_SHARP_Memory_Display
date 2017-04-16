@@ -44,7 +44,7 @@ class Adafruit_SharpMem : public Adafruit_GFX {
 
  private:
   uint8_t _ss, _clk, _mosi;
-#ifdef __AVR__
+#if defined(__AVR__) || defined(TEENSYDUINO)
   volatile uint8_t *dataport, *clkport;
   uint8_t _sharpmem_vcom, datapinmask, clkpinmask;
 #endif
