@@ -47,16 +47,22 @@ All text above, and the splash screen must be included in any redistribution
 #define SHARPMEM_BIT_CLEAR      (0x20)
 #define TOGGLE_VCOM             do { _sharpmem_vcom = _sharpmem_vcom ? 0x00 : SHARPMEM_BIT_VCOM; } while(0);
 
-byte sharpmem_buffer[(SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8];
+byte *sharpmem_buffer;
 
 /* ************* */
 /* CONSTRUCTORS  */
 /* ************* */
-Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss) :
-Adafruit_GFX(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT) {
+Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint16_t width, uint16_t height) :
+Adafruit_GFX(width, height) {
   _clk = clk;
   _mosi = mosi;
   _ss = ss;
+
+  _width = width;
+  _height = height;
+}
+
+boolean Adafruit_SharpMem::begin(void) {
 
   // Set pin state before direction to make sure they start this way (no glitching)
   digitalWrite(_ss, HIGH);  
@@ -66,19 +72,25 @@ Adafruit_GFX(SHARPMEM_LCDWIDTH, SHARPMEM_LCDHEIGHT) {
   pinMode(_ss, OUTPUT);
   pinMode(_clk, OUTPUT);
   pinMode(_mosi, OUTPUT);
-  
+
+#if defined(USE_FAST_PINIO)
   clkport     = portOutputRegister(digitalPinToPort(_clk));
   clkpinmask  = digitalPinToBitMask(_clk);
   dataport    = portOutputRegister(digitalPinToPort(_mosi));
   datapinmask = digitalPinToBitMask(_mosi);
-  
+#endif
+
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
 
-}
 
-void Adafruit_SharpMem::begin() {
+  sharpmem_buffer = (byte *)malloc((_width * _height) / 8);
+
+  if (!sharpmem_buffer) return false;
+
   setRotation(2);
+
+  return true;
 }
 
 /* *************** */
@@ -96,26 +108,37 @@ void Adafruit_SharpMem::sendbyte(uint8_t data)
   uint8_t i = 0;
 
   // LCD expects LSB first
-  for (i=0; i<8; i++) 
-  { 
+
+#if defined(USE_FAST_PINIO)
+  for (i=0; i<8; i++) {
     // Make sure clock starts low
-    //digitalWrite(_clk, LOW);
     *clkport &= ~clkpinmask;
     if (data & 0x80) 
-      //digitalWrite(_mosi, HIGH);
       *dataport |=  datapinmask;
     else 
-      //digitalWrite(_mosi, LOW);
       *dataport &= ~datapinmask;
 
     // Clock is active high
-    //digitalWrite(_clk, HIGH);
     *clkport |=  clkpinmask;
     data <<= 1; 
   }
-  // Make sure clock ends low
-  //digitalWrite(_clk, LOW);
   *clkport &= ~clkpinmask;
+#else
+  for (i=0; i<8; i++) { 
+    // Make sure clock starts low
+    digitalWrite(_clk, LOW);
+    if (data & 0x80) 
+      digitalWrite(_mosi, HIGH);
+    else 
+      digitalWrite(_mosi, LOW);
+
+    // Clock is active high
+    digitalWrite(_clk, HIGH);
+    data <<= 1; 
+  }
+  // Make sure clock ends low
+  digitalWrite(_clk, LOW);
+#endif
 }
 
 void Adafruit_SharpMem::sendbyteLSB(uint8_t data) 
@@ -123,26 +146,38 @@ void Adafruit_SharpMem::sendbyteLSB(uint8_t data)
   uint8_t i = 0;
 
   // LCD expects LSB first
-  for (i=0; i<8; i++) 
-  { 
+#if defined(USE_FAST_PINIO)
+  for (i=0; i<8; i++) { 
     // Make sure clock starts low
-    //digitalWrite(_clk, LOW);
     *clkport &= ~clkpinmask;
     if (data & 0x01) 
-      //digitalWrite(_mosi, HIGH);
       *dataport |=  datapinmask;
     else 
-      //digitalWrite(_mosi, LOW);
       *dataport &= ~datapinmask;
     // Clock is active high
-    //digitalWrite(_clk, HIGH);
     *clkport |=  clkpinmask;
     data >>= 1; 
   }
   // Make sure clock ends low
-  //digitalWrite(_clk, LOW);
   *clkport &= ~clkpinmask;
+#else
+  for (i=0; i<8; i++) 
+  { 
+    // Make sure clock starts low
+    digitalWrite(_clk, LOW);
+    if (data & 0x01) 
+      digitalWrite(_mosi, HIGH);
+    else 
+      digitalWrite(_mosi, LOW);
+    // Clock is active high
+    digitalWrite(_clk, HIGH);
+    data >>= 1; 
+  }
+  // Make sure clock ends low
+  digitalWrite(_clk, LOW);
+#endif
 }
+
 /* ************** */
 /* PUBLIC METHODS */
 /* ************** */
@@ -182,10 +217,10 @@ void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color)
   }
 
   if(color) {
-    sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) / 8] |=
+    sharpmem_buffer[(y* _width + x) / 8] |=
       pgm_read_byte(&set[x & 7]);
   } else {
-    sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) / 8] &=
+    sharpmem_buffer[(y* _width + x) / 8] &=
       pgm_read_byte(&clr[x & 7]);
   }
 }
@@ -221,7 +256,7 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y)
     break;
   }
 
-  return sharpmem_buffer[(y*SHARPMEM_LCDWIDTH + x) / 8] &
+  return sharpmem_buffer[(y*_width + x) / 8] &
     pgm_read_byte(&set[x & 7]) ? 1 : 0;
 }
 
@@ -232,7 +267,7 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y)
 /**************************************************************************/
 void Adafruit_SharpMem::clearDisplay() 
 {
-  memset(sharpmem_buffer, 0xff, (SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8);
+  memset(sharpmem_buffer, 0xff, (_width * _height) / 8);
   // Send the clear screen command rather than doing a HW refresh (quicker)
   digitalWrite(_ss, HIGH);
   sendbyte(_sharpmem_vcom | SHARPMEM_BIT_CLEAR);
@@ -249,7 +284,7 @@ void Adafruit_SharpMem::clearDisplay()
 void Adafruit_SharpMem::refresh(void) 
 {
   uint16_t i, totalbytes, currentline, oldline;  
-  totalbytes = (SHARPMEM_LCDWIDTH * SHARPMEM_LCDHEIGHT) / 8;
+  totalbytes = (_width * _height) / 8;
 
   // Send the write command
   digitalWrite(_ss, HIGH);
@@ -264,12 +299,12 @@ void Adafruit_SharpMem::refresh(void)
   for (i=0; i<totalbytes; i++)
   {
     sendbyteLSB(sharpmem_buffer[i]);
-    currentline = ((i+1)/(SHARPMEM_LCDWIDTH/8)) + 1;
+    currentline = ((i+1)/(_width/8)) + 1;
     if(currentline != oldline)
     {
       // Send end of line and address bytes
       sendbyteLSB(0x00);
-      if (currentline <= SHARPMEM_LCDHEIGHT)
+      if (currentline <= _height)
       {
         sendbyteLSB(currentline);
       }
