@@ -34,7 +34,7 @@ All text above, and the splash screen must be included in any redistribution
   //#define USE_FAST_PINIO
 #elif defined(ARDUINO_FEATHER52) || defined (ESP8266) || defined (ESP32) || defined(__SAM3X8E__) || defined(ARDUINO_ARCH_SAMD)
   typedef volatile uint32_t RwReg;
-  //#define USE_FAST_PINIO
+  #define USE_FAST_PINIO  // tested!
 #elif defined (__AVR__) || defined(TEENSYDUINO)
   typedef volatile uint8_t RwReg;
   //#define USE_FAST_PINIO
