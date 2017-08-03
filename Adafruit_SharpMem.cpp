@@ -63,7 +63,6 @@ Adafruit_GFX(width, height) {
 }
 
 boolean Adafruit_SharpMem::begin(void) {
-
   // Set pin state before direction to make sure they start this way (no glitching)
   digitalWrite(_ss, HIGH);  
   digitalWrite(_clk, LOW);  
@@ -88,7 +87,7 @@ boolean Adafruit_SharpMem::begin(void) {
 
   if (!sharpmem_buffer) return false;
 
-  setRotation(2);
+  setRotation(0);
 
   return true;
 }

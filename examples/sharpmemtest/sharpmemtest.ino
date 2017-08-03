@@ -22,7 +22,7 @@ All text above, and the splash screen must be included in any redistribution
 // any pins can be used
 #define SHARP_SCK 13
 #define SHARP_MOSI 11
-#define SHARP_SS 13
+#define SHARP_SS 10
 
 Adafruit_SharpMem display(SHARP_SCK, SHARP_MOSI, SHARP_SS);
 
