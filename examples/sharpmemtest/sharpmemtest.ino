@@ -24,7 +24,8 @@ All text above, and the splash screen must be included in any redistribution
 #define SHARP_MOSI 11
 #define SHARP_SS 10
 
-Adafruit_SharpMem display(SHARP_SCK, SHARP_MOSI, SHARP_SS);
+// Set the size of the display here, e.g. 144x168!
+Adafruit_SharpMem display(SHARP_SCK, SHARP_MOSI, SHARP_SS, 144, 168);
 
 #define BLACK 0
 #define WHITE 1
