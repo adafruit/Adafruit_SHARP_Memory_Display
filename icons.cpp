@@ -6,18 +6,21 @@
  */
 #include <stdint.h>
 #ifdef __AVR__
+ #include <avr/io.h>
  #include <avr/pgmspace.h>
-#elif defined ESP8266 //Added for compatibility with ESP8266 BOARD
+#elif defined(ESP8266)
  #include <pgmspace.h>
+#else
+ #define PROGMEM
 #endif
 
 //
 //  Image data for selectbar_bottom
 //
 
-const uint8_t selectbar_bottomWidthPixels = 36;
-const uint8_t selectbar_bottomHeightPixels = 8;
-extern const uint8_t selectbar_bottom[] PROGMEM =
+extern const uint8_t selectbar_bottomWidthPixels = 36;
+extern const uint8_t selectbar_bottomHeightPixels = 8;
+extern const unsigned char selectbar_bottom[] PROGMEM =
 {
 		0x00, 0x00, 0x00, 0x00, 0x00, //
 		0x00, 0x00, 0x00, 0x00, 0x00, //
@@ -29,9 +32,9 @@ extern const uint8_t selectbar_bottom[] PROGMEM =
 		0xFF, 0xFF, 0xFF, 0xFF, 0xF0, // ####################################
 };
 
-// 
+//
 //  Image data for selectbar_top
-// 
+//
 // Bitmap sizes for selectbar_top
 extern const uint8_t selectbar_topWidthPixels = 36;
 extern const uint8_t selectbar_topHeightPixels = 8;
