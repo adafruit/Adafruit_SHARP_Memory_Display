@@ -72,6 +72,8 @@ class Adafruit_SharpMem : public Adafruit_GFX {
   void clearDisplay();
   void refresh(void);
   void clearDisplayBuffer();
+  virtual void drawFastVLine(int16_t x, int16_t y, int16_t h, uint16_t color);
+  virtual void drawFastHLine(int16_t x, int16_t y, int16_t w, uint16_t color);
 
  private:
   uint8_t _ss, _clk, _mosi;
@@ -83,6 +85,9 @@ class Adafruit_SharpMem : public Adafruit_GFX {
     volatile RwReg *dataport, *clkport;
     uint32_t _sharpmem_vcom, datapinmask, clkpinmask;
 #endif
+
+  inline void drawFastVLineInternal(int16_t x, int16_t y, int16_t h, uint16_t color) __attribute__((always_inline));
+  inline void drawFastHLineInternal(int16_t x, int16_t y, int16_t w, uint16_t color) __attribute__((always_inline));
 
   void sendbyte(uint8_t data);
   void sendbyteLSB(uint8_t data);
