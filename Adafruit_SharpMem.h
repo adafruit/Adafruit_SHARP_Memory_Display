@@ -37,7 +37,7 @@ All text above, and the splash screen must be included in any redistribution
   #define USE_FAST_PINIO  // tested!
 #elif defined (__AVR__) || defined(TEENSYDUINO)
   typedef volatile uint8_t RwReg;
-  //#define USE_FAST_PINIO
+  #define USE_FAST_PINIO
 #else
   #undef USE_FAST_PINIO  
 #endif
