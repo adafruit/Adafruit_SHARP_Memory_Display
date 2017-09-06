@@ -21,6 +21,10 @@ All text above, and the splash screen must be included in any redistribution
 #else
  #include "WProgram.h"
 #endif
+
+#if defined(RAMSTART) && defined(RAMEND) && ((RAMEND-RAMSTART) < 4096)
+  #warning "Display may not work on devices with less than 4K RAM"
+#endif
  
 #include <Adafruit_GFX.h>
 #ifdef __AVR
