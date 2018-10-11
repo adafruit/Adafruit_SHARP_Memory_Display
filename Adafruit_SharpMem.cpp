@@ -313,3 +313,13 @@ void Adafruit_SharpMem::refresh(void)
   sendbyteLSB(0x00);
   digitalWrite(_ss, LOW);
 }
+
+/**************************************************************************/
+/*!
+    @brief Clears the display buffer without outputting to the display
+*/
+/**************************************************************************/
+void Adafruit_SharpMem::clearDisplayBuffer()
+{
+  memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT) / 8);
+}
