@@ -4,14 +4,14 @@ This is an Arduino library for our Monochrome SHARP Memory Displays
   Pick one up today in the adafruit shop!
   ------> http://www.adafruit.com/products/1393
 
-These displays use SPI to communicate, 3 pins are required to
+These displays use SPI to communicate, 3 pins are required to  
 interface
 
-Adafruit invests time and resources providing this open source code,
-please support Adafruit and open-source hardware by purchasing
+Adafruit invests time and resources providing this open source code, 
+please support Adafruit and open-source hardware by purchasing 
 products from Adafruit!
 
-Written by Limor Fried/Ladyada  for Adafruit Industries.
+Written by Limor Fried/Ladyada  for Adafruit Industries.  
 BSD license, check license.txt for more information
 All text above, and the splash screen must be included in any redistribution
 *********************************************************************/
@@ -61,10 +61,10 @@ Adafruit_GFX(width, height) {
 
 boolean Adafruit_SharpMem::begin(void) {
   // Set pin state before direction to make sure they start this way (no glitching)
-  digitalWrite(_ss, HIGH);
-  digitalWrite(_clk, LOW);
-  digitalWrite(_mosi, HIGH);
-
+  digitalWrite(_ss, HIGH);  
+  digitalWrite(_clk, LOW);  
+  digitalWrite(_mosi, HIGH);  
+  
   pinMode(_ss, OUTPUT);
   pinMode(_clk, OUTPUT);
   pinMode(_mosi, OUTPUT);
@@ -93,13 +93,13 @@ boolean Adafruit_SharpMem::begin(void) {
 /* PRIVATE METHODS */
 /* *************** */
 
-
+ 
 /**************************************************************************/
 /*!
     @brief  Sends a single byte in pseudo-SPI.
 */
 /**************************************************************************/
-void Adafruit_SharpMem::sendbyte(uint8_t data)
+void Adafruit_SharpMem::sendbyte(uint8_t data) 
 {
   uint8_t i = 0;
 
@@ -109,65 +109,65 @@ void Adafruit_SharpMem::sendbyte(uint8_t data)
   for (i=0; i<8; i++) {
     // Make sure clock starts low
     *clkport &= ~clkpinmask;
-    if (data & 0x80)
+    if (data & 0x80) 
       *dataport |=  datapinmask;
-    else
+    else 
       *dataport &= ~datapinmask;
 
     // Clock is active high
     *clkport |=  clkpinmask;
-    data <<= 1;
+    data <<= 1; 
   }
   *clkport &= ~clkpinmask;
 #else
-  for (i=0; i<8; i++) {
+  for (i=0; i<8; i++) { 
     // Make sure clock starts low
     digitalWrite(_clk, LOW);
-    if (data & 0x80)
+    if (data & 0x80) 
       digitalWrite(_mosi, HIGH);
-    else
+    else 
       digitalWrite(_mosi, LOW);
 
     // Clock is active high
     digitalWrite(_clk, HIGH);
-    data <<= 1;
+    data <<= 1; 
   }
   // Make sure clock ends low
   digitalWrite(_clk, LOW);
 #endif
 }
 
-void Adafruit_SharpMem::sendbyteLSB(uint8_t data)
+void Adafruit_SharpMem::sendbyteLSB(uint8_t data) 
 {
   uint8_t i = 0;
 
   // LCD expects LSB first
 #if defined(USE_FAST_PINIO)
-  for (i=0; i<8; i++) {
+  for (i=0; i<8; i++) { 
     // Make sure clock starts low
     *clkport &= ~clkpinmask;
-    if (data & 0x01)
+    if (data & 0x01) 
       *dataport |=  datapinmask;
-    else
+    else 
       *dataport &= ~datapinmask;
     // Clock is active high
     *clkport |=  clkpinmask;
-    data >>= 1;
+    data >>= 1; 
   }
   // Make sure clock ends low
   *clkport &= ~clkpinmask;
 #else
-  for (i=0; i<8; i++)
-  {
+  for (i=0; i<8; i++) 
+  { 
     // Make sure clock starts low
     digitalWrite(_clk, LOW);
-    if (data & 0x01)
+    if (data & 0x01) 
       digitalWrite(_mosi, HIGH);
-    else
+    else 
       digitalWrite(_mosi, LOW);
     // Clock is active high
     digitalWrite(_clk, HIGH);
-    data >>= 1;
+    data >>= 1; 
   }
   // Make sure clock ends low
   digitalWrite(_clk, LOW);
@@ -185,7 +185,7 @@ static const uint8_t PROGMEM
             (uint8_t)~16, (uint8_t)~32, (uint8_t)~64, (uint8_t)~128 };
 
 /**************************************************************************/
-/*!
+/*! 
     @brief Draws a single pixel in image buffer
 
     @param[in]  x
@@ -194,7 +194,7 @@ static const uint8_t PROGMEM
                 The y position (0 based)
 */
 /**************************************************************************/
-void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color)
+void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color) 
 {
   if((x < 0) || (x >= _width) || (y < 0) || (y >= _height)) return;
 
@@ -223,7 +223,7 @@ void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color)
 }
 
 /**************************************************************************/
-/*!
+/*! 
     @brief Gets the value (1 or 0) of the specified pixel from the buffer
 
     @param[in]  x
@@ -258,11 +258,11 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y)
 }
 
 /**************************************************************************/
-/*!
+/*! 
     @brief Clears the screen
 */
 /**************************************************************************/
-void Adafruit_SharpMem::clearDisplay()
+void Adafruit_SharpMem::clearDisplay() 
 {
   memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT) / 8);
   // Send the clear screen command rather than doing a HW refresh (quicker)
@@ -274,13 +274,13 @@ void Adafruit_SharpMem::clearDisplay()
 }
 
 /**************************************************************************/
-/*!
+/*! 
     @brief Renders the contents of the pixel buffer on the LCD
 */
 /**************************************************************************/
-void Adafruit_SharpMem::refresh(void)
+void Adafruit_SharpMem::refresh(void) 
 {
-  uint16_t i, totalbytes, currentline, oldline;
+  uint16_t i, totalbytes, currentline, oldline;  
   totalbytes = (WIDTH * HEIGHT) / 8;
 
   // Send the write command
@@ -312,14 +312,4 @@ void Adafruit_SharpMem::refresh(void)
   // Send another trailing 8 bits for the last line
   sendbyteLSB(0x00);
   digitalWrite(_ss, LOW);
-}
-
-/**************************************************************************/
-/*!
-    @brief Clears the display buffer with outputting to the display
-*/
-/**************************************************************************/
-void Adafruit_SharpMem::clearDisplayBuffer()
-{
-  memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT) / 8);
 }
