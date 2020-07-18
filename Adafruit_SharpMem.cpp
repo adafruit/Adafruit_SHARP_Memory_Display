@@ -52,9 +52,6 @@ All text above, and the splash screen must be included in any redistribution
 
  **************************************************************************/
 
-#define SHARPMEM_BIT_WRITECMD (0x80)
-#define SHARPMEM_BIT_VCOM (0x40)
-#define SHARPMEM_BIT_CLEAR (0x20)
 #define TOGGLE_VCOM                                                            \
   do {                                                                         \
     _sharpmem_vcom = _sharpmem_vcom ? 0x00 : SHARPMEM_BIT_VCOM;                \
@@ -77,6 +74,10 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss,
   _clk = clk;
   _mosi = mosi;
   _ss = ss;
+  if (spidev) {
+    delete spidev;
+  }
+  spidev = new Adafruit_SPIDevice(ss, clk, -1, mosi, 1000000, SPI_BITORDER_LSBFIRST);
 }
 /**
  * @brief Start the driver object, setting up pins and configuring a buffer for
@@ -87,13 +88,9 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss,
 boolean Adafruit_SharpMem::begin(void) {
   // Set pin state before direction to make sure they start this way (no
   // glitching)
-  digitalWrite(_ss, HIGH);
-  digitalWrite(_clk, LOW);
-  digitalWrite(_mosi, HIGH);
-
-  pinMode(_ss, OUTPUT);
-  pinMode(_clk, OUTPUT);
-  pinMode(_mosi, OUTPUT);
+  if (! spidev->begin()) {
+    return false;
+  }
 
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
@@ -247,10 +244,18 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y) {
 /**************************************************************************/
 void Adafruit_SharpMem::clearDisplay() {
   memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT) / 8);
+
   // Send the clear screen command rather than doing a HW refresh (quicker)
   digitalWrite(_ss, HIGH);
-  sendbyte(_sharpmem_vcom | SHARPMEM_BIT_CLEAR);
-  sendbyteLSB(0x00);
+
+  uint8_t vcombyte = 0x04;
+  if (_sharpmem_vcom) {
+    vcombyte |= 0x02;
+  }
+
+  spidev->transfer(vcombyte);
+  spidev->transfer(0x00);
+
   TOGGLE_VCOM;
   digitalWrite(_ss, LOW);
 }

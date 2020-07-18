@@ -16,13 +16,17 @@ BSD license, check license.txt for more information
 All text above, and the splash screen must be included in any redistribution
 *********************************************************************/
 
-#include "Arduino.h"
+#include <Arduino.h>
+#include <Adafruit_SPIDevice.h>
+#include <Adafruit_GFX.h>
 
 #if defined(RAMSTART) && defined(RAMEND) && ((RAMEND - RAMSTART) < 4096)
 #warning "Display may not work on devices with less than 4K RAM"
 #endif
 
-#include <Adafruit_GFX.h>
+#define SHARPMEM_BIT_WRITECMD (0x80)
+#define SHARPMEM_BIT_VCOM (0x40)
+#define SHARPMEM_BIT_CLEAR (0x20)
 
 /**
  * @brief Class to control a Sharp memory display
@@ -39,8 +43,10 @@ public:
   void refresh(void);
 
 private:
+  Adafruit_SPIDevice *spidev = NULL;
+
   uint8_t _ss, _clk, _mosi;
-  uint32_t _sharpmem_vcom;
+  uint8_t _sharpmem_vcom;
 
   void sendbyte(uint8_t data);
   void sendbyteLSB(uint8_t data);
