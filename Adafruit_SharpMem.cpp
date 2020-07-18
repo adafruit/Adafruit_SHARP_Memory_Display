@@ -217,8 +217,8 @@ void Adafruit_SharpMem::clearDisplay() {
   // Send the clear screen command rather than doing a HW refresh (quicker)
   digitalWrite(_cs, HIGH);
 
-  spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_CLEAR);
-  spidev->transfer(0x00);
+  uint8_t clear_data[2] = {_sharpmem_vcom | SHARPMEM_BIT_CLEAR, 0x00};
+  spidev->transfer(clear_data, 2);
 
   TOGGLE_VCOM;
   digitalWrite(_cs, LOW);
