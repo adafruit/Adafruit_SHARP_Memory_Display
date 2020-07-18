@@ -46,7 +46,7 @@ public:
 
 private:
   Adafruit_SPIDevice *spidev = NULL;
-
+  uint8_t *sharpmem_buffer = NULL;
   uint8_t _cs;
   uint8_t _sharpmem_vcom;
 };

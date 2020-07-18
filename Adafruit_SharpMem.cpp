@@ -57,8 +57,6 @@ All text above, and the splash screen must be included in any redistribution
     _sharpmem_vcom = _sharpmem_vcom ? 0x00 : SHARPMEM_BIT_VCOM;                \
   } while (0);
 
-byte *sharpmem_buffer;
-
 /**
  * @brief Construct a new Adafruit_SharpMem object with software SPI
  *
@@ -76,7 +74,7 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t cs,
     delete spidev;
   }
   spidev =
-      new Adafruit_SPIDevice(cs, clk, -1, mosi, 1000000, SPI_BITORDER_LSBFIRST);
+      new Adafruit_SPIDevice(cs, clk, -1, mosi, 2000000, SPI_BITORDER_LSBFIRST);
 }
 
 /**
@@ -94,7 +92,7 @@ Adafruit_SharpMem::Adafruit_SharpMem(SPIClass *theSPI, uint8_t cs,
   if (spidev) {
     delete spidev;
   }
-  spidev = new Adafruit_SPIDevice(cs, 1000000, SPI_BITORDER_LSBFIRST, SPI_MODE0,
+  spidev = new Adafruit_SPIDevice(cs, 2000000, SPI_BITORDER_LSBFIRST, SPI_MODE0,
                                   theSPI);
 }
 
@@ -115,7 +113,7 @@ boolean Adafruit_SharpMem::begin(void) {
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
 
-  sharpmem_buffer = (byte *)malloc((WIDTH * HEIGHT) / 8);
+  sharpmem_buffer = (uint8_t *)malloc((WIDTH * HEIGHT) / 8);
 
   if (!sharpmem_buffer)
     return false;
@@ -245,17 +243,17 @@ void Adafruit_SharpMem::refresh(void) {
   uint16_t totalbytes = (WIDTH * HEIGHT) / 8;
 
   for (i = 0; i < totalbytes; i+=bytes_per_line) {
+    uint8_t line[bytes_per_line+2];
 
     // Send address byte
     currentline = ((i + 1) / (WIDTH / 8)) + 1;
-    spidev->transfer(currentline);
-
-    for (int j=0; j<bytes_per_line; j++) {
-      spidev->transfer(*(sharpmem_buffer+i+j));
-    }
-
+    line[0] = currentline;
+    // copy over this line
+    memcpy(line+1, sharpmem_buffer+i, bytes_per_line);
     // Send end of line
-    spidev->transfer(0x00);
+    line[bytes_per_line+1] = 0x00;
+    // send it!
+    spidev->transfer(line, bytes_per_line+2);
   }
 
   // Send another trailing 8 bits for the last line
