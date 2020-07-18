@@ -71,8 +71,6 @@ byte *sharpmem_buffer;
 Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss,
                                      uint16_t width, uint16_t height)
     : Adafruit_GFX(width, height) {
-  _clk = clk;
-  _mosi = mosi;
   _ss = ss;
   if (spidev) {
     delete spidev;
@@ -104,58 +102,6 @@ boolean Adafruit_SharpMem::begin(void) {
 
   return true;
 }
-
-/* *************** */
-/* PRIVATE METHODS */
-/* *************** */
-
-/**************************************************************************/
-/*!
-    @brief  Sends a single byte in pseudo-SPI.
-*/
-/**************************************************************************/
-void Adafruit_SharpMem::sendbyte(uint8_t data) {
-  uint8_t i = 0;
-
-  // LCD expects LSB first
-
-  for (i = 0; i < 8; i++) {
-    // Make sure clock starts low
-    digitalWrite(_clk, LOW);
-    if (data & 0x80)
-      digitalWrite(_mosi, HIGH);
-    else
-      digitalWrite(_mosi, LOW);
-
-    // Clock is active high
-    digitalWrite(_clk, HIGH);
-    data <<= 1;
-  }
-  // Make sure clock ends low
-  digitalWrite(_clk, LOW);
-}
-
-void Adafruit_SharpMem::sendbyteLSB(uint8_t data) {
-  uint8_t i = 0;
-
-  for (i = 0; i < 8; i++) {
-    // Make sure clock starts low
-    digitalWrite(_clk, LOW);
-    if (data & 0x01)
-      digitalWrite(_mosi, HIGH);
-    else
-      digitalWrite(_mosi, LOW);
-    // Clock is active high
-    digitalWrite(_clk, HIGH);
-    data >>= 1;
-  }
-  // Make sure clock ends low
-  digitalWrite(_clk, LOW);
-}
-
-/* ************** */
-/* PUBLIC METHODS */
-/* ************** */
 
 // 1<<n is a costly operation on AVR -- table usu. smaller & faster
 static const uint8_t PROGMEM set[] = {1, 2, 4, 8, 16, 32, 64, 128},
@@ -248,12 +194,7 @@ void Adafruit_SharpMem::clearDisplay() {
   // Send the clear screen command rather than doing a HW refresh (quicker)
   digitalWrite(_ss, HIGH);
 
-  uint8_t vcombyte = 0x04;
-  if (_sharpmem_vcom) {
-    vcombyte |= 0x02;
-  }
-
-  spidev->transfer(vcombyte);
+  spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_CLEAR);
   spidev->transfer(0x00);
 
   TOGGLE_VCOM;
@@ -271,28 +212,29 @@ void Adafruit_SharpMem::refresh(void) {
 
   // Send the write command
   digitalWrite(_ss, HIGH);
-  sendbyte(SHARPMEM_BIT_WRITECMD | _sharpmem_vcom);
+
+  spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_WRITECMD );
   TOGGLE_VCOM;
 
   // Send the address for line 1
   oldline = currentline = 1;
-  sendbyteLSB(currentline);
+  spidev->transfer(currentline);
 
   // Send image buffer
   for (i = 0; i < totalbytes; i++) {
-    sendbyteLSB(sharpmem_buffer[i]);
+    spidev->transfer(sharpmem_buffer[i]);
     currentline = ((i + 1) / (WIDTH / 8)) + 1;
     if (currentline != oldline) {
       // Send end of line and address bytes
-      sendbyteLSB(0x00);
+      spidev->transfer(0x00);
       if (currentline <= HEIGHT) {
-        sendbyteLSB(currentline);
+        spidev->transfer(currentline);
       }
       oldline = currentline;
     }
   }
 
   // Send another trailing 8 bits for the last line
-  sendbyteLSB(0x00);
+  spidev->transfer(0x00);
   digitalWrite(_ss, LOW);
 }

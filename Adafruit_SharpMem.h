@@ -24,9 +24,9 @@ All text above, and the splash screen must be included in any redistribution
 #warning "Display may not work on devices with less than 4K RAM"
 #endif
 
-#define SHARPMEM_BIT_WRITECMD (0x80)
-#define SHARPMEM_BIT_VCOM (0x40)
-#define SHARPMEM_BIT_CLEAR (0x20)
+#define SHARPMEM_BIT_WRITECMD (0x01) // 0x80 in LSB format
+#define SHARPMEM_BIT_VCOM (0x02)   // 0x40 in LSB format
+#define SHARPMEM_BIT_CLEAR (0x04)  // 0x20 in LSB format
 
 /**
  * @brief Class to control a Sharp memory display
@@ -45,9 +45,6 @@ public:
 private:
   Adafruit_SPIDevice *spidev = NULL;
 
-  uint8_t _ss, _clk, _mosi;
+  uint8_t _ss;
   uint8_t _sharpmem_vcom;
-
-  void sendbyte(uint8_t data);
-  void sendbyteLSB(uint8_t data);
 };
