@@ -60,23 +60,44 @@ All text above, and the splash screen must be included in any redistribution
 byte *sharpmem_buffer;
 
 /**
- * @brief Construct a new Adafruit_SharpMem::Adafruit_SharpMem object
+ * @brief Construct a new Adafruit_SharpMem object with software SPI
  *
  * @param clk The clock pin
  * @param mosi The MOSI pin
- * @param ss The slave select /cs pin
+ * @param cs The display chip select pin - **NOTE** this is ACTIVE HIGH!
  * @param width The display width
  * @param height The display height
  */
-Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss,
+Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t cs,
                                      uint16_t width, uint16_t height)
     : Adafruit_GFX(width, height) {
-  _ss = ss;
+  _cs = cs;
   if (spidev) {
     delete spidev;
   }
-  spidev = new Adafruit_SPIDevice(ss, clk, -1, mosi, 1000000, SPI_BITORDER_LSBFIRST);
+  spidev =
+      new Adafruit_SPIDevice(cs, clk, -1, mosi, 1000000, SPI_BITORDER_LSBFIRST);
 }
+
+/**
+ * @brief Construct a new Adafruit_SharpMem object with hardware SPI
+ *
+ * @param theSPI Pointer to hardware SPI device you want to use
+ * @param cs The display chip select pin - **NOTE** this is ACTIVE HIGH!
+ * @param width The display width
+ * @param height The display height
+ */
+Adafruit_SharpMem::Adafruit_SharpMem(SPIClass *theSPI, uint8_t cs,
+                                     uint16_t width, uint16_t height)
+    : Adafruit_GFX(width, height) {
+  _cs = cs;
+  if (spidev) {
+    delete spidev;
+  }
+  spidev = new Adafruit_SPIDevice(cs, 1000000, SPI_BITORDER_LSBFIRST, SPI_MODE0,
+                                  theSPI);
+}
+
 /**
  * @brief Start the driver object, setting up pins and configuring a buffer for
  * the screen contents
@@ -84,11 +105,12 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss,
  * @return boolean true: success false: failure
  */
 boolean Adafruit_SharpMem::begin(void) {
-  // Set pin state before direction to make sure they start this way (no
-  // glitching)
-  if (! spidev->begin()) {
+  if (!spidev->begin()) {
     return false;
   }
+  // this display is weird in that _cs is active HIGH not LOW like every other
+  // SPI device
+  digitalWrite(_cs, LOW);
 
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
@@ -191,14 +213,16 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y) {
 void Adafruit_SharpMem::clearDisplay() {
   memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT) / 8);
 
+  spidev->beginTransaction();
   // Send the clear screen command rather than doing a HW refresh (quicker)
-  digitalWrite(_ss, HIGH);
+  digitalWrite(_cs, HIGH);
 
   spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_CLEAR);
   spidev->transfer(0x00);
 
   TOGGLE_VCOM;
-  digitalWrite(_ss, LOW);
+  digitalWrite(_cs, LOW);
+  spidev->endTransaction();
 }
 
 /**************************************************************************/
@@ -210,10 +234,11 @@ void Adafruit_SharpMem::refresh(void) {
   uint16_t i, totalbytes, currentline, oldline;
   totalbytes = (WIDTH * HEIGHT) / 8;
 
+  spidev->beginTransaction();
   // Send the write command
-  digitalWrite(_ss, HIGH);
+  digitalWrite(_cs, HIGH);
 
-  spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_WRITECMD );
+  spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_WRITECMD);
   TOGGLE_VCOM;
 
   // Send the address for line 1
@@ -236,5 +261,6 @@ void Adafruit_SharpMem::refresh(void) {
 
   // Send another trailing 8 bits for the last line
   spidev->transfer(0x00);
-  digitalWrite(_ss, LOW);
+  digitalWrite(_cs, LOW);
+  spidev->endTransaction();
 }
