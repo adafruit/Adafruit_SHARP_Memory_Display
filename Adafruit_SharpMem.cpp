@@ -231,8 +231,7 @@ void Adafruit_SharpMem::clearDisplay() {
 */
 /**************************************************************************/
 void Adafruit_SharpMem::refresh(void) {
-  uint16_t i, totalbytes, currentline, oldline;
-  totalbytes = (WIDTH * HEIGHT) / 8;
+  uint16_t i, currentline;
 
   spidev->beginTransaction();
   // Send the write command
@@ -241,22 +240,22 @@ void Adafruit_SharpMem::refresh(void) {
   spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_WRITECMD);
   TOGGLE_VCOM;
 
-  // Send the address for line 1
-  oldline = currentline = 1;
-  spidev->transfer(currentline);
 
-  // Send image buffer
-  for (i = 0; i < totalbytes; i++) {
-    spidev->transfer(sharpmem_buffer[i]);
+  uint8_t bytes_per_line = WIDTH / 8;
+  uint16_t totalbytes = (WIDTH * HEIGHT) / 8;
+
+  for (i = 0; i < totalbytes; i+=bytes_per_line) {
+
+    // Send address byte
     currentline = ((i + 1) / (WIDTH / 8)) + 1;
-    if (currentline != oldline) {
-      // Send end of line and address bytes
-      spidev->transfer(0x00);
-      if (currentline <= HEIGHT) {
-        spidev->transfer(currentline);
-      }
-      oldline = currentline;
+    spidev->transfer(currentline);
+
+    for (int j=0; j<bytes_per_line; j++) {
+      spidev->transfer(*(sharpmem_buffer+i+j));
     }
+
+    // Send end of line
+    spidev->transfer(0x00);
   }
 
   // Send another trailing 8 bits for the last line
