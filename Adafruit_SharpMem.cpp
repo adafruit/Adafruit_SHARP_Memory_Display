@@ -65,16 +65,17 @@ All text above, and the splash screen must be included in any redistribution
  * @param cs The display chip select pin - **NOTE** this is ACTIVE HIGH!
  * @param width The display width
  * @param height The display height
+ * @param freq The SPI clock frequency desired (unlikely to be that fast in soft spi mode!)
  */
 Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t cs,
-                                     uint16_t width, uint16_t height)
+                                     uint16_t width, uint16_t height, uint32_t freq)
     : Adafruit_GFX(width, height) {
   _cs = cs;
   if (spidev) {
     delete spidev;
   }
   spidev =
-      new Adafruit_SPIDevice(cs, clk, -1, mosi, 2000000, SPI_BITORDER_LSBFIRST);
+      new Adafruit_SPIDevice(cs, clk, -1, mosi, freq, SPI_BITORDER_LSBFIRST);
 }
 
 /**
@@ -84,15 +85,16 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t cs,
  * @param cs The display chip select pin - **NOTE** this is ACTIVE HIGH!
  * @param width The display width
  * @param height The display height
+ * @param freq The SPI clock frequency desired
  */
 Adafruit_SharpMem::Adafruit_SharpMem(SPIClass *theSPI, uint8_t cs,
-                                     uint16_t width, uint16_t height)
+                                     uint16_t width, uint16_t height, uint32_t freq)
     : Adafruit_GFX(width, height) {
   _cs = cs;
   if (spidev) {
     delete spidev;
   }
-  spidev = new Adafruit_SPIDevice(cs, 2000000, SPI_BITORDER_LSBFIRST, SPI_MODE0,
+  spidev = new Adafruit_SPIDevice(cs, freq, SPI_BITORDER_LSBFIRST, SPI_MODE0,
                                   theSPI);
 }
 
