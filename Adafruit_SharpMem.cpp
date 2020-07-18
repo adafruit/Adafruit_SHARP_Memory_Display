@@ -95,13 +95,6 @@ boolean Adafruit_SharpMem::begin(void) {
   pinMode(_clk, OUTPUT);
   pinMode(_mosi, OUTPUT);
 
-#if defined(USE_FAST_PINIO)
-  clkport = portOutputRegister(digitalPinToPort(_clk));
-  clkpinmask = digitalPinToBitMask(_clk);
-  dataport = portOutputRegister(digitalPinToPort(_mosi));
-  datapinmask = digitalPinToBitMask(_mosi);
-#endif
-
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
 
@@ -129,21 +122,6 @@ void Adafruit_SharpMem::sendbyte(uint8_t data) {
 
   // LCD expects LSB first
 
-#if defined(USE_FAST_PINIO)
-  for (i = 0; i < 8; i++) {
-    // Make sure clock starts low
-    *clkport &= ~clkpinmask;
-    if (data & 0x80)
-      *dataport |= datapinmask;
-    else
-      *dataport &= ~datapinmask;
-
-    // Clock is active high
-    *clkport |= clkpinmask;
-    data <<= 1;
-  }
-  *clkport &= ~clkpinmask;
-#else
   for (i = 0; i < 8; i++) {
     // Make sure clock starts low
     digitalWrite(_clk, LOW);
@@ -158,28 +136,11 @@ void Adafruit_SharpMem::sendbyte(uint8_t data) {
   }
   // Make sure clock ends low
   digitalWrite(_clk, LOW);
-#endif
 }
 
 void Adafruit_SharpMem::sendbyteLSB(uint8_t data) {
   uint8_t i = 0;
 
-  // LCD expects LSB first
-#if defined(USE_FAST_PINIO)
-  for (i = 0; i < 8; i++) {
-    // Make sure clock starts low
-    *clkport &= ~clkpinmask;
-    if (data & 0x01)
-      *dataport |= datapinmask;
-    else
-      *dataport &= ~datapinmask;
-    // Clock is active high
-    *clkport |= clkpinmask;
-    data >>= 1;
-  }
-  // Make sure clock ends low
-  *clkport &= ~clkpinmask;
-#else
   for (i = 0; i < 8; i++) {
     // Make sure clock starts low
     digitalWrite(_clk, LOW);
@@ -193,7 +154,6 @@ void Adafruit_SharpMem::sendbyteLSB(uint8_t data) {
   }
   // Make sure clock ends low
   digitalWrite(_clk, LOW);
-#endif
 }
 
 /* ************** */

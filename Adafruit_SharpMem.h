@@ -16,36 +16,13 @@ BSD license, check license.txt for more information
 All text above, and the splash screen must be included in any redistribution
 *********************************************************************/
 
-#if ARDUINO >= 100
 #include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
 
 #if defined(RAMSTART) && defined(RAMEND) && ((RAMEND - RAMSTART) < 4096)
 #warning "Display may not work on devices with less than 4K RAM"
 #endif
 
 #include <Adafruit_GFX.h>
-#ifdef __AVR
-#include <avr/pgmspace.h>
-#elif defined(ESP8266)
-#include <pgmspace.h>
-#endif
-
-#if defined(ARDUINO_STM32_FEATHER)
-typedef volatile uint32 RwReg;
-//#define USE_FAST_PINIO
-#elif defined(ARDUINO_FEATHER52) || defined(ESP8266) || defined(ESP32) ||      \
-    defined(__SAM3X8E__) || defined(ARDUINO_ARCH_SAMD)
-typedef volatile uint32_t RwReg;
-#define USE_FAST_PINIO // tested!
-#elif defined(__AVR__) || defined(TEENSYDUINO)
-typedef volatile uint8_t RwReg;
-#define USE_FAST_PINIO
-#else
-#undef USE_FAST_PINIO
-#endif
 
 /**
  * @brief Class to control a Sharp memory display
@@ -64,11 +41,6 @@ public:
 private:
   uint8_t _ss, _clk, _mosi;
   uint32_t _sharpmem_vcom;
-
-#ifdef USE_FAST_PINIO
-  volatile RwReg *dataport, *clkport;
-  uint32_t datapinmask, clkpinmask;
-#endif
 
   void sendbyte(uint8_t data);
   void sendbyteLSB(uint8_t data);
