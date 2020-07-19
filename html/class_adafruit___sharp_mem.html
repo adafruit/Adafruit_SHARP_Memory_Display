@@ -81,9 +81,12 @@ Inheritance diagram for Adafruit_SharpMem:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a47972703621ba8f8de88bd6b60dce584"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_adafruit___sharp_mem.html#a47972703621ba8f8de88bd6b60dce584">Adafruit_SharpMem</a> (uint8_t clk, uint8_t mosi, uint8_t ss, uint16_t w=96, uint16_t h=96)</td></tr>
-<tr class="memdesc:a47972703621ba8f8de88bd6b60dce584"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="class_adafruit___sharp_mem.html#a47972703621ba8f8de88bd6b60dce584" title="Construct a new Adafruit_SharpMem::Adafruit_SharpMem object. ">Adafruit_SharpMem::Adafruit_SharpMem</a> object.  <a href="#a47972703621ba8f8de88bd6b60dce584">More...</a><br /></td></tr>
-<tr class="separator:a47972703621ba8f8de88bd6b60dce584"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a75ef48abd136bdd4239dc6c6c0c23ebb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_adafruit___sharp_mem.html#a75ef48abd136bdd4239dc6c6c0c23ebb">Adafruit_SharpMem</a> (uint8_t clk, uint8_t mosi, uint8_t cs, uint16_t w=96, uint16_t h=96, uint32_t freq=2000000)</td></tr>
+<tr class="memdesc:a75ef48abd136bdd4239dc6c6c0c23ebb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="class_adafruit___sharp_mem.html" title="Class to control a Sharp memory display. ">Adafruit_SharpMem</a> object with software SPI.  <a href="#a75ef48abd136bdd4239dc6c6c0c23ebb">More...</a><br /></td></tr>
+<tr class="separator:a75ef48abd136bdd4239dc6c6c0c23ebb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aff44c86caa414f4120dab37083d6ba5a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_adafruit___sharp_mem.html#aff44c86caa414f4120dab37083d6ba5a">Adafruit_SharpMem</a> (SPIClass *theSPI, uint8_t cs, uint16_t w=96, uint16_t h=96, uint32_t freq=2000000)</td></tr>
+<tr class="memdesc:aff44c86caa414f4120dab37083d6ba5a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Construct a new <a class="el" href="class_adafruit___sharp_mem.html" title="Class to control a Sharp memory display. ">Adafruit_SharpMem</a> object with hardware SPI.  <a href="#aff44c86caa414f4120dab37083d6ba5a">More...</a><br /></td></tr>
+<tr class="separator:aff44c86caa414f4120dab37083d6ba5a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab9421eb631799688adb7ddfce04172f2"><td class="memItemLeft" align="right" valign="top">boolean&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_adafruit___sharp_mem.html#ab9421eb631799688adb7ddfce04172f2">begin</a> ()</td></tr>
 <tr class="memdesc:ab9421eb631799688adb7ddfce04172f2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start the driver object, setting up pins and configuring a buffer for the screen contents.  <a href="#ab9421eb631799688adb7ddfce04172f2">More...</a><br /></td></tr>
 <tr class="separator:ab9421eb631799688adb7ddfce04172f2"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -105,8 +108,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class to control a Sharp memory display. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a47972703621ba8f8de88bd6b60dce584"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a47972703621ba8f8de88bd6b60dce584">&#9670;&nbsp;</a></span>Adafruit_SharpMem()</h2>
+<a id="a75ef48abd136bdd4239dc6c6c0c23ebb"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a75ef48abd136bdd4239dc6c6c0c23ebb">&#9670;&nbsp;</a></span>Adafruit_SharpMem() <span class="overload">[1/2]</span></h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -127,7 +130,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint8_t&#160;</td>
-          <td class="paramname"><em>ss</em>, </td>
+          <td class="paramname"><em>cs</em>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -139,7 +142,13 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">uint16_t&#160;</td>
-          <td class="paramname"><em>height</em> = <code>96</code>&#160;</td>
+          <td class="paramname"><em>height</em> = <code>96</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>freq</em> = <code>2000000</code>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -149,14 +158,73 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
       </table>
 </div><div class="memdoc">
 
-<p>Construct a new <a class="el" href="class_adafruit___sharp_mem.html#a47972703621ba8f8de88bd6b60dce584" title="Construct a new Adafruit_SharpMem::Adafruit_SharpMem object. ">Adafruit_SharpMem::Adafruit_SharpMem</a> object. </p>
+<p>Construct a new <a class="el" href="class_adafruit___sharp_mem.html" title="Class to control a Sharp memory display. ">Adafruit_SharpMem</a> object with software SPI. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">clk</td><td>The clock pin </td></tr>
     <tr><td class="paramname">mosi</td><td>The MOSI pin </td></tr>
-    <tr><td class="paramname">ss</td><td>The slave select /cs pin </td></tr>
+    <tr><td class="paramname">cs</td><td>The display chip select pin - <b>NOTE</b> this is ACTIVE HIGH! </td></tr>
     <tr><td class="paramname">width</td><td>The display width </td></tr>
     <tr><td class="paramname">height</td><td>The display height </td></tr>
+    <tr><td class="paramname">freq</td><td>The SPI clock frequency desired (unlikely to be that fast in soft spi mode!) </td></tr>
+  </table>
+  </dd>
+</dl>
+
+</div>
+</div>
+<a id="aff44c86caa414f4120dab37083d6ba5a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aff44c86caa414f4120dab37083d6ba5a">&#9670;&nbsp;</a></span>Adafruit_SharpMem() <span class="overload">[2/2]</span></h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">Adafruit_SharpMem::Adafruit_SharpMem </td>
+          <td>(</td>
+          <td class="paramtype">SPIClass *&#160;</td>
+          <td class="paramname"><em>theSPI</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint8_t&#160;</td>
+          <td class="paramname"><em>cs</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>width</em> = <code>96</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint16_t&#160;</td>
+          <td class="paramname"><em>height</em> = <code>96</code>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">uint32_t&#160;</td>
+          <td class="paramname"><em>freq</em> = <code>2000000</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Construct a new <a class="el" href="class_adafruit___sharp_mem.html" title="Class to control a Sharp memory display. ">Adafruit_SharpMem</a> object with hardware SPI. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">theSPI</td><td>Pointer to hardware SPI device you want to use </td></tr>
+    <tr><td class="paramname">cs</td><td>The display chip select pin - <b>NOTE</b> this is ACTIVE HIGH! </td></tr>
+    <tr><td class="paramname">width</td><td>The display width </td></tr>
+    <tr><td class="paramname">height</td><td>The display height </td></tr>
+    <tr><td class="paramname">freq</td><td>The SPI clock frequency desired </td></tr>
   </table>
   </dd>
 </dl>
