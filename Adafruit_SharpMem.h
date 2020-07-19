@@ -18,36 +18,17 @@ All text above, and the splash screen must be included in any redistribution
 #ifndef LIB_ADAFRUIT_SHARPMEM
 #define LIB_ADAFRUIT_SHARPMEM
 
-#if ARDUINO >= 100
-#include "Arduino.h"
-#else
-#include "WProgram.h"
-#endif
+#include <Adafruit_GFX.h>
+#include <Adafruit_SPIDevice.h>
+#include <Arduino.h>
 
 #if defined(RAMSTART) && defined(RAMEND) && ((RAMEND - RAMSTART) < 4096)
 #warning "Display may not work on devices with less than 4K RAM"
 #endif
 
-#include <Adafruit_GFX.h>
-#ifdef __AVR
-#include <avr/pgmspace.h>
-#elif defined(ESP8266)
-#include <pgmspace.h>
-#endif
-
-#if defined(ARDUINO_STM32_FEATHER)
-typedef volatile uint32 RwReg;
-//#define USE_FAST_PINIO
-#elif defined(ARDUINO_FEATHER52) || defined(ESP8266) || defined(ESP32) ||      \
-    defined(__SAM3X8E__) || defined(ARDUINO_ARCH_SAMD)
-typedef volatile uint32_t RwReg;
-#define USE_FAST_PINIO // tested!
-#elif defined(__AVR__) || defined(TEENSYDUINO)
-typedef volatile uint8_t RwReg;
-#define USE_FAST_PINIO
-#else
-#undef USE_FAST_PINIO
-#endif
+#define SHARPMEM_BIT_WRITECMD (0x01) // 0x80 in LSB format
+#define SHARPMEM_BIT_VCOM (0x02)     // 0x40 in LSB format
+#define SHARPMEM_BIT_CLEAR (0x04)    // 0x20 in LSB format
 
 /**
  * @brief Class to control a Sharp memory display
@@ -55,8 +36,10 @@ typedef volatile uint8_t RwReg;
  */
 class Adafruit_SharpMem : public Adafruit_GFX {
 public:
-  Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss, uint16_t w = 96,
-                    uint16_t h = 96);
+  Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t cs, uint16_t w = 96,
+                    uint16_t h = 96, uint32_t freq = 2000000);
+  Adafruit_SharpMem(SPIClass *theSPI, uint8_t cs, uint16_t w = 96,
+                    uint16_t h = 96, uint32_t freq = 2000000);
   boolean begin();
   void drawPixel(int16_t x, int16_t y, uint16_t color);
   uint8_t getPixel(uint16_t x, uint16_t y);
@@ -65,16 +48,10 @@ public:
   void clearDisplayBuffer();
 
 private:
-  uint8_t _ss, _clk, _mosi;
-  uint32_t _sharpmem_vcom;
-
-#ifdef USE_FAST_PINIO
-  volatile RwReg *dataport, *clkport;
-  uint32_t datapinmask, clkpinmask;
-#endif
-
-  void sendbyte(uint8_t data);
-  void sendbyteLSB(uint8_t data);
+  Adafruit_SPIDevice *spidev = NULL;
+  uint8_t *sharpmem_buffer = NULL;
+  uint8_t _cs;
+  uint8_t _sharpmem_vcom;
 };
 
 #endif

@@ -52,32 +52,55 @@ All text above, and the splash screen must be included in any redistribution
 
  **************************************************************************/
 
-#define SHARPMEM_BIT_WRITECMD (0x80)
-#define SHARPMEM_BIT_VCOM (0x40)
-#define SHARPMEM_BIT_CLEAR (0x20)
 #define TOGGLE_VCOM                                                            \
   do {                                                                         \
     _sharpmem_vcom = _sharpmem_vcom ? 0x00 : SHARPMEM_BIT_VCOM;                \
   } while (0);
 
-byte *sharpmem_buffer;
-
 /**
- * @brief Construct a new Adafruit_SharpMem::Adafruit_SharpMem object
+ * @brief Construct a new Adafruit_SharpMem object with software SPI
  *
  * @param clk The clock pin
  * @param mosi The MOSI pin
- * @param ss The slave select /cs pin
+ * @param cs The display chip select pin - **NOTE** this is ACTIVE HIGH!
  * @param width The display width
  * @param height The display height
+ * @param freq The SPI clock frequency desired (unlikely to be that fast in soft
+ * spi mode!)
  */
-Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss,
-                                     uint16_t width, uint16_t height)
+Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t cs,
+                                     uint16_t width, uint16_t height,
+                                     uint32_t freq)
     : Adafruit_GFX(width, height) {
-  _clk = clk;
-  _mosi = mosi;
-  _ss = ss;
+  _cs = cs;
+  if (spidev) {
+    delete spidev;
+  }
+  spidev =
+      new Adafruit_SPIDevice(cs, clk, -1, mosi, freq, SPI_BITORDER_LSBFIRST);
 }
+
+/**
+ * @brief Construct a new Adafruit_SharpMem object with hardware SPI
+ *
+ * @param theSPI Pointer to hardware SPI device you want to use
+ * @param cs The display chip select pin - **NOTE** this is ACTIVE HIGH!
+ * @param width The display width
+ * @param height The display height
+ * @param freq The SPI clock frequency desired
+ */
+Adafruit_SharpMem::Adafruit_SharpMem(SPIClass *theSPI, uint8_t cs,
+                                     uint16_t width, uint16_t height,
+                                     uint32_t freq)
+    : Adafruit_GFX(width, height) {
+  _cs = cs;
+  if (spidev) {
+    delete spidev;
+  }
+  spidev = new Adafruit_SPIDevice(cs, freq, SPI_BITORDER_LSBFIRST, SPI_MODE0,
+                                  theSPI);
+}
+
 /**
  * @brief Start the driver object, setting up pins and configuring a buffer for
  * the screen contents
@@ -85,27 +108,17 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t ss,
  * @return boolean true: success false: failure
  */
 boolean Adafruit_SharpMem::begin(void) {
-  // Set pin state before direction to make sure they start this way (no
-  // glitching)
-  digitalWrite(_ss, HIGH);
-  digitalWrite(_clk, LOW);
-  digitalWrite(_mosi, HIGH);
-
-  pinMode(_ss, OUTPUT);
-  pinMode(_clk, OUTPUT);
-  pinMode(_mosi, OUTPUT);
-
-#if defined(USE_FAST_PINIO)
-  clkport = portOutputRegister(digitalPinToPort(_clk));
-  clkpinmask = digitalPinToBitMask(_clk);
-  dataport = portOutputRegister(digitalPinToPort(_mosi));
-  datapinmask = digitalPinToBitMask(_mosi);
-#endif
+  if (!spidev->begin()) {
+    return false;
+  }
+  // this display is weird in that _cs is active HIGH not LOW like every other
+  // SPI device
+  digitalWrite(_cs, LOW);
 
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
 
-  sharpmem_buffer = (byte *)malloc((WIDTH * HEIGHT) / 8);
+  sharpmem_buffer = (uint8_t *)malloc((WIDTH * HEIGHT) / 8);
 
   if (!sharpmem_buffer)
     return false;
@@ -114,91 +127,6 @@ boolean Adafruit_SharpMem::begin(void) {
 
   return true;
 }
-
-/* *************** */
-/* PRIVATE METHODS */
-/* *************** */
-
-/**************************************************************************/
-/*!
-    @brief  Sends a single byte in pseudo-SPI.
-*/
-/**************************************************************************/
-void Adafruit_SharpMem::sendbyte(uint8_t data) {
-  uint8_t i = 0;
-
-  // LCD expects LSB first
-
-#if defined(USE_FAST_PINIO)
-  for (i = 0; i < 8; i++) {
-    // Make sure clock starts low
-    *clkport &= ~clkpinmask;
-    if (data & 0x80)
-      *dataport |= datapinmask;
-    else
-      *dataport &= ~datapinmask;
-
-    // Clock is active high
-    *clkport |= clkpinmask;
-    data <<= 1;
-  }
-  *clkport &= ~clkpinmask;
-#else
-  for (i = 0; i < 8; i++) {
-    // Make sure clock starts low
-    digitalWrite(_clk, LOW);
-    if (data & 0x80)
-      digitalWrite(_mosi, HIGH);
-    else
-      digitalWrite(_mosi, LOW);
-
-    // Clock is active high
-    digitalWrite(_clk, HIGH);
-    data <<= 1;
-  }
-  // Make sure clock ends low
-  digitalWrite(_clk, LOW);
-#endif
-}
-
-void Adafruit_SharpMem::sendbyteLSB(uint8_t data) {
-  uint8_t i = 0;
-
-  // LCD expects LSB first
-#if defined(USE_FAST_PINIO)
-  for (i = 0; i < 8; i++) {
-    // Make sure clock starts low
-    *clkport &= ~clkpinmask;
-    if (data & 0x01)
-      *dataport |= datapinmask;
-    else
-      *dataport &= ~datapinmask;
-    // Clock is active high
-    *clkport |= clkpinmask;
-    data >>= 1;
-  }
-  // Make sure clock ends low
-  *clkport &= ~clkpinmask;
-#else
-  for (i = 0; i < 8; i++) {
-    // Make sure clock starts low
-    digitalWrite(_clk, LOW);
-    if (data & 0x01)
-      digitalWrite(_mosi, HIGH);
-    else
-      digitalWrite(_mosi, LOW);
-    // Clock is active high
-    digitalWrite(_clk, HIGH);
-    data >>= 1;
-  }
-  // Make sure clock ends low
-  digitalWrite(_clk, LOW);
-#endif
-}
-
-/* ************** */
-/* PUBLIC METHODS */
-/* ************** */
 
 // 1<<n is a costly operation on AVR -- table usu. smaller & faster
 static const uint8_t PROGMEM set[] = {1, 2, 4, 8, 16, 32, 64, 128},
@@ -287,12 +215,17 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y) {
 /**************************************************************************/
 void Adafruit_SharpMem::clearDisplay() {
   memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT) / 8);
+
+  spidev->beginTransaction();
   // Send the clear screen command rather than doing a HW refresh (quicker)
-  digitalWrite(_ss, HIGH);
-  sendbyte(_sharpmem_vcom | SHARPMEM_BIT_CLEAR);
-  sendbyteLSB(0x00);
+  digitalWrite(_cs, HIGH);
+
+  uint8_t clear_data[2] = {_sharpmem_vcom | SHARPMEM_BIT_CLEAR, 0x00};
+  spidev->transfer(clear_data, 2);
+
   TOGGLE_VCOM;
-  digitalWrite(_ss, LOW);
+  digitalWrite(_cs, LOW);
+  spidev->endTransaction();
 }
 
 /**************************************************************************/
@@ -301,35 +234,36 @@ void Adafruit_SharpMem::clearDisplay() {
 */
 /**************************************************************************/
 void Adafruit_SharpMem::refresh(void) {
-  uint16_t i, totalbytes, currentline, oldline;
-  totalbytes = (WIDTH * HEIGHT) / 8;
+  uint16_t i, currentline;
 
+  spidev->beginTransaction();
   // Send the write command
-  digitalWrite(_ss, HIGH);
-  sendbyte(SHARPMEM_BIT_WRITECMD | _sharpmem_vcom);
+  digitalWrite(_cs, HIGH);
+
+  spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_WRITECMD);
   TOGGLE_VCOM;
 
-  // Send the address for line 1
-  oldline = currentline = 1;
-  sendbyteLSB(currentline);
+  uint8_t bytes_per_line = WIDTH / 8;
+  uint16_t totalbytes = (WIDTH * HEIGHT) / 8;
 
-  // Send image buffer
-  for (i = 0; i < totalbytes; i++) {
-    sendbyteLSB(sharpmem_buffer[i]);
+  for (i = 0; i < totalbytes; i += bytes_per_line) {
+    uint8_t line[bytes_per_line + 2];
+
+    // Send address byte
     currentline = ((i + 1) / (WIDTH / 8)) + 1;
-    if (currentline != oldline) {
-      // Send end of line and address bytes
-      sendbyteLSB(0x00);
-      if (currentline <= HEIGHT) {
-        sendbyteLSB(currentline);
-      }
-      oldline = currentline;
-    }
+    line[0] = currentline;
+    // copy over this line
+    memcpy(line + 1, sharpmem_buffer + i, bytes_per_line);
+    // Send end of line
+    line[bytes_per_line + 1] = 0x00;
+    // send it!
+    spidev->transfer(line, bytes_per_line + 2);
   }
 
   // Send another trailing 8 bits for the last line
-  sendbyteLSB(0x00);
-  digitalWrite(_ss, LOW);
+  spidev->transfer(0x00);
+  digitalWrite(_cs, LOW);
+  spidev->endTransaction();
 }
 
 /**************************************************************************/
