@@ -65,10 +65,12 @@ All text above, and the splash screen must be included in any redistribution
  * @param cs The display chip select pin - **NOTE** this is ACTIVE HIGH!
  * @param width The display width
  * @param height The display height
- * @param freq The SPI clock frequency desired (unlikely to be that fast in soft spi mode!)
+ * @param freq The SPI clock frequency desired (unlikely to be that fast in soft
+ * spi mode!)
  */
 Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t cs,
-                                     uint16_t width, uint16_t height, uint32_t freq)
+                                     uint16_t width, uint16_t height,
+                                     uint32_t freq)
     : Adafruit_GFX(width, height) {
   _cs = cs;
   if (spidev) {
@@ -88,7 +90,8 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t cs,
  * @param freq The SPI clock frequency desired
  */
 Adafruit_SharpMem::Adafruit_SharpMem(SPIClass *theSPI, uint8_t cs,
-                                     uint16_t width, uint16_t height, uint32_t freq)
+                                     uint16_t width, uint16_t height,
+                                     uint32_t freq)
     : Adafruit_GFX(width, height) {
   _cs = cs;
   if (spidev) {
@@ -240,22 +243,21 @@ void Adafruit_SharpMem::refresh(void) {
   spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_WRITECMD);
   TOGGLE_VCOM;
 
-
   uint8_t bytes_per_line = WIDTH / 8;
   uint16_t totalbytes = (WIDTH * HEIGHT) / 8;
 
-  for (i = 0; i < totalbytes; i+=bytes_per_line) {
-    uint8_t line[bytes_per_line+2];
+  for (i = 0; i < totalbytes; i += bytes_per_line) {
+    uint8_t line[bytes_per_line + 2];
 
     // Send address byte
     currentline = ((i + 1) / (WIDTH / 8)) + 1;
     line[0] = currentline;
     // copy over this line
-    memcpy(line+1, sharpmem_buffer+i, bytes_per_line);
+    memcpy(line + 1, sharpmem_buffer + i, bytes_per_line);
     // Send end of line
-    line[bytes_per_line+1] = 0x00;
+    line[bytes_per_line + 1] = 0x00;
     // send it!
-    spidev->transfer(line, bytes_per_line+2);
+    spidev->transfer(line, bytes_per_line + 2);
   }
 
   // Send another trailing 8 bits for the last line
