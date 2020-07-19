@@ -271,7 +271,6 @@ void Adafruit_SharpMem::refresh(void) {
     @brief Clears the display buffer without outputting to the display
 */
 /**************************************************************************/
-void Adafruit_SharpMem::clearDisplayBuffer()
-{
+void Adafruit_SharpMem::clearDisplayBuffer() {
   memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT) / 8);
 }
