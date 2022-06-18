@@ -41,6 +41,7 @@ public:
   Adafruit_SharpMem(SPIClass *theSPI, uint8_t cs, uint16_t w = 96,
                     uint16_t h = 96, uint32_t freq = 2000000);
   boolean begin();
+  boolean begin_spi();
   void drawPixel(int16_t x, int16_t y, uint16_t color);
   uint8_t getPixel(uint16_t x, uint16_t y);
   void clearDisplay();

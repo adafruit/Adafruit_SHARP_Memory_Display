@@ -108,9 +108,7 @@ Adafruit_SharpMem::Adafruit_SharpMem(SPIClass *theSPI, uint8_t cs,
  * @return boolean true: success false: failure
  */
 boolean Adafruit_SharpMem::begin(void) {
-  if (!spidev->begin()) {
-    return false;
-  }
+  if (!begin_spi()) return false;
   // this display is weird in that _cs is active HIGH not LOW like every other
   // SPI device
   digitalWrite(_cs, LOW);
@@ -126,6 +124,10 @@ boolean Adafruit_SharpMem::begin(void) {
   setRotation(0);
 
   return true;
+}
+
+boolean Adafruit_SharpMem::begin_spi(void) {
+  return spidev->begin();
 }
 
 // 1<<n is a costly operation on AVR -- table usu. smaller & faster
