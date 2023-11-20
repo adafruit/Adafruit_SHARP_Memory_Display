@@ -24,6 +24,10 @@ All text above, must be included in any redistribution
 #define SHARP_MOSI 11
 #define SHARP_SS   10
 
+// Set the size and color depth, default is 1 bit depth.
+// For example: 3 bits for LS013B7DH06 (8 colors 128x128 display)
+// Adafruit_SharpMem display(SHARP_SCK, SHARP_MOSI, SHARP_SS, 128, 128, 2000000, 3);
+
 // Set the size of the display here, e.g. 144x168!
 Adafruit_SharpMem display(SHARP_SCK, SHARP_MOSI, SHARP_SS, 144, 168);
 // The currently-available SHARP Memory Display (144x168 pixels)

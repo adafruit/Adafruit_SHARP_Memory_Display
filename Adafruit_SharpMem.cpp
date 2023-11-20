@@ -67,12 +67,14 @@ All text above, and the splash screen must be included in any redistribution
  * @param height The display height
  * @param freq The SPI clock frequency desired (unlikely to be that fast in soft
  * spi mode!)
+ * @param color_depth_bits The color depth in bits per pixel
  */
 Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t cs,
                                      uint16_t width, uint16_t height,
-                                     uint32_t freq)
+                                     uint32_t freq, uint8_t color_depth_bits)
     : Adafruit_GFX(width, height) {
   _cs = cs;
+  _color_depth_bits = color_depth_bits;
   if (spidev) {
     delete spidev;
   }
@@ -88,12 +90,14 @@ Adafruit_SharpMem::Adafruit_SharpMem(uint8_t clk, uint8_t mosi, uint8_t cs,
  * @param width The display width
  * @param height The display height
  * @param freq The SPI clock frequency desired
+ * @param color_depth_bits The color depth in bits per pixel
  */
 Adafruit_SharpMem::Adafruit_SharpMem(SPIClass *theSPI, uint8_t cs,
                                      uint16_t width, uint16_t height,
-                                     uint32_t freq)
+                                     uint32_t freq, uint8_t color_depth_bits)
     : Adafruit_GFX(width, height) {
   _cs = cs;
+  _color_depth_bits = color_depth_bits;
   if (spidev) {
     delete spidev;
   }
@@ -118,7 +122,7 @@ boolean Adafruit_SharpMem::begin(void) {
   // Set the vcom bit to a defined state
   _sharpmem_vcom = SHARPMEM_BIT_VCOM;
 
-  sharpmem_buffer = (uint8_t *)malloc((WIDTH * HEIGHT) / 8);
+  sharpmem_buffer = (uint8_t *)malloc((WIDTH * HEIGHT * _color_depth_bits) / 8);
 
   if (!sharpmem_buffer)
     return false;
@@ -165,11 +169,14 @@ void Adafruit_SharpMem::drawPixel(int16_t x, int16_t y, uint16_t color) {
     y = HEIGHT - 1 - y;
     break;
   }
-
-  if (color) {
-    sharpmem_buffer[(y * WIDTH + x) / 8] |= pgm_read_byte(&set[x & 7]);
-  } else {
-    sharpmem_buffer[(y * WIDTH + x) / 8] &= pgm_read_byte(&clr[x & 7]);
+  for (int i = 0; i < _color_depth_bits; i++) {
+    if (color & set[i]) {
+      sharpmem_buffer[((y * WIDTH + x) * _color_depth_bits + i) / 8] |=
+          pgm_read_byte(&set[(x * _color_depth_bits + i) & 7]);
+    } else {
+      sharpmem_buffer[((y * WIDTH + x) * _color_depth_bits + i) / 8] &=
+          pgm_read_byte(&clr[(x * _color_depth_bits + i) & 7]);
+    }
   }
 }
 
@@ -204,8 +211,10 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y) {
     break;
   }
 
-  return sharpmem_buffer[(y * WIDTH + x) / 8] & pgm_read_byte(&set[x & 7]) ? 1
-                                                                           : 0;
+  return sharpmem_buffer[(y * WIDTH + x) * _color_depth_bits / 8] &
+                 pgm_read_byte(&set[x * _color_depth_bits & 7])
+             ? 1
+             : 0;
 }
 
 /**************************************************************************/
@@ -214,7 +223,7 @@ uint8_t Adafruit_SharpMem::getPixel(uint16_t x, uint16_t y) {
 */
 /**************************************************************************/
 void Adafruit_SharpMem::clearDisplay() {
-  memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT) / 8);
+  memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT * _color_depth_bits) / 8);
 
   spidev->beginTransaction();
   // Send the clear screen command rather than doing a HW refresh (quicker)
@@ -244,14 +253,14 @@ void Adafruit_SharpMem::refresh(void) {
   spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_WRITECMD);
   TOGGLE_VCOM;
 
-  uint8_t bytes_per_line = WIDTH / 8;
-  uint16_t totalbytes = (WIDTH * HEIGHT) / 8;
+  uint8_t bytes_per_line = WIDTH * _color_depth_bits / 8;
+  uint16_t totalbytes = (WIDTH * HEIGHT * _color_depth_bits) / 8;
 
   for (i = 0; i < totalbytes; i += bytes_per_line) {
     uint8_t line[bytes_per_line + 2];
 
     // Send address byte
-    currentline = ((i + 1) / (WIDTH / 8)) + 1;
+    currentline = ((i + 1) / (WIDTH * _color_depth_bits / 8)) + 1;
     line[0] = currentline;
     // copy over this line
     memcpy(line + 1, sharpmem_buffer + i, bytes_per_line);
@@ -273,5 +282,5 @@ void Adafruit_SharpMem::refresh(void) {
 */
 /**************************************************************************/
 void Adafruit_SharpMem::clearDisplayBuffer() {
-  memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT) / 8);
+  memset(sharpmem_buffer, 0xff, (WIDTH * HEIGHT * _color_depth_bits) / 8);
 }
