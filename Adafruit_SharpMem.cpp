@@ -238,10 +238,12 @@ void Adafruit_SharpMem::refresh(void) {
   uint16_t i, currentline;
 
   spidev->beginTransaction();
+
   // Send the write command
   digitalWrite(_cs, HIGH);
 
-  spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_WRITECMD);
+  // Send the LSB of the line index which starts at 1
+  spidev->transfer(_sharpmem_vcom | SHARPMEM_BIT_WRITECMD | (1 << 6));
   TOGGLE_VCOM;
 
   uint8_t bytes_per_line = WIDTH / 8;
@@ -252,11 +254,21 @@ void Adafruit_SharpMem::refresh(void) {
 
     // Send address byte
     currentline = ((i + 1) / (WIDTH / 8)) + 1;
-    line[0] = currentline;
+
+    // Send end of line
+    if (HEIGHT < 256) {
+      line[0] = currentline;
+      line[bytes_per_line + 1] = 0x00;
+    } else {
+      // Supports https://www.digikey.com/en/products/detail/sharp-microelectronics/LS032B7DD02/23349498
+      // https://www.sharpsde.com/fileadmin/products/Displays/Specs/LS032B7DD02_01Nov23_Spec_LD-2023X13.pdf
+      line[0] = currentline >> 2;
+      line[bytes_per_line + 1] = ((currentline + 1) & 0x3) << 6;
+    }
+
     // copy over this line
     memcpy(line + 1, sharpmem_buffer + i, bytes_per_line);
-    // Send end of line
-    line[bytes_per_line + 1] = 0x00;
+
     // send it!
     spidev->transfer(line, bytes_per_line + 2);
   }
