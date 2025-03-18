@@ -46,6 +46,13 @@ public:
   void clearDisplay();
   void refresh(void);
   void clearDisplayBuffer();
+  /**
+   * @brief Get a pointer to the display buffer.
+   * This allows direct access to the internal framebuffer.
+   *
+   * @return uint8_t* Pointer to the framebuffer memory.
+   */
+  uint8_t *getBuffer() { return sharpmem_buffer; }
 
 private:
   Adafruit_SPIDevice *spidev = NULL;
