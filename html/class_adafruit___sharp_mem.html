@@ -108,6 +108,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
 void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_adafruit___sharp_mem.html#a4731701693c89a1d346305faa0442756">clearDisplayBuffer</a> ()</td></tr>
 <tr class="memdesc:a4731701693c89a1d346305faa0442756"><td class="mdescLeft">&#160;</td><td class="mdescRight">Clears the display buffer without outputting to the display. <br /></td></tr>
 <tr class="separator:a4731701693c89a1d346305faa0442756"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af823aaa30ed4fc67564ccd10dba70279"><td class="memItemLeft" align="right" valign="top">uint8_t *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_adafruit___sharp_mem.html#af823aaa30ed4fc67564ccd10dba70279">getBuffer</a> ()</td></tr>
+<tr class="memdesc:af823aaa30ed4fc67564ccd10dba70279"><td class="mdescLeft">&#160;</td><td class="mdescRight">Get a pointer to the display buffer. This allows direct access to the internal framebuffer.  <a href="#af823aaa30ed4fc67564ccd10dba70279">More...</a><br /></td></tr>
+<tr class="separator:af823aaa30ed4fc67564ccd10dba70279"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class to control a Sharp memory display. </p>
@@ -336,6 +339,34 @@ void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="clas
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>1 if the pixel is enabled, 0 if disabled </dd></dl>
+
+</div>
+</div>
+<a id="af823aaa30ed4fc67564ccd10dba70279"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af823aaa30ed4fc67564ccd10dba70279">&#9670;&nbsp;</a></span>getBuffer()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">uint8_t* Adafruit_SharpMem::getBuffer </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inline</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Get a pointer to the display buffer. This allows direct access to the internal framebuffer. </p>
+<dl class="section return"><dt>Returns</dt><dd>uint8_t* Pointer to the framebuffer memory. </dd></dl>
 
 </div>
 </div>
